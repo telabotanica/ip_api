@@ -3,13 +3,21 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use App\Controller\DelObservationController;
 use App\Repository\DelObservationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: DelObservationRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['operations']], name: 'observation_single'),
+    ],
+    formats: ["json"],
+    controller: DelObservationController::class
+)]
 class DelObservation
 {
     #[Groups(['observations'])]

@@ -23,14 +23,12 @@ class DelObservationController extends AbstractController
         $this->serializer = $serializer;
     }
 
-    #[Route('/observation/{id}', name: 'app_del_observation', methods: ['GET'])]
-    public function GetOneObs(int $id): Response
+    #[Route('/observations/{id_observation}', name: 'observation_single', methods: ['GET'])]
+    public function GetOneObs(int $id_observation): Response
     {
-        $obs = $this->obsRepository->find($id);
+        $obs = $this->obsRepository->findOneBy(['id_observation' => $id_observation]);
         if (!$obs) {
-            throw $this->createNotFoundException(
-                'Pas \'observation avec l\'id '.$id
-            );
+            return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
         $json = $this->serializer->serialize($obs, 'json', ['groups' => 'observations']);
