@@ -45,8 +45,8 @@ class DelUtilisateurInfos
     private ?\DateTimeInterface $date_derniere_consultation_evenements = null;
 
     #[Groups(['user'])]
-    #[ORM\Column(type: Types::SMALLINT, length: 1)]
-    private ?int $admin = null;
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private ?bool $admin = null;
 
     public function getIdUtilisateur(): ?int
     {
