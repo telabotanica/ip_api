@@ -16,6 +16,27 @@ class DelObservationRepository extends ServiceEntityRepository
         parent::__construct($registry, DelObservation::class);
     }
 
+    public function findAllPaginated($criteres)
+    {
+        $queryBuilder = $this->createQueryBuilder('d');
+
+        if (in_array($criteres['tri'], ['date_transmission', 'date_observation'], true)) {
+            $queryBuilder->orderBy('d.' . $criteres['tri'], $criteres['order']);
+        }
+
+        //TODO pour nb_commentaires
+
+        $queryBuilder
+            ->setMaxResults($criteres['limit'])
+            ->setFirstResult($criteres['page']*$criteres['limit']);
+
+        if ($criteres['pnInscrit'] == 1) {
+            $queryBuilder->andWhere('d.ce_utilisateur != 0');
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
     //    /**
     //     * @return DelObservation[] Returns an array of DelObservation objects
     //     */
