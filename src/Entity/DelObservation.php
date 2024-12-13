@@ -10,6 +10,7 @@ use App\Repository\DelObservationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: DelObservationRepository::class)]
 #[ApiResource(
@@ -173,46 +174,62 @@ class DelObservation
     private ?int $id_observation = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('auteur.id')]
     #[ORM\Column(nullable: true)]
     private ?int $ce_utilisateur = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('auteur.nom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_utilisateur = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('auteur.prenom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $prenom_utilisateur = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('auteur.courriel')]
     #[ORM\Column(length: 155, nullable: true)]
     private ?string $courriel_utilisateur = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('determination.ns')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_sel = null;
 
     #[Groups(['observations'])]
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $nom_ret = null;
-
-    #[Groups(['observations'])]
+    #[SerializedName('determination.nn')]
     #[ORM\Column(nullable: true)]
     private ?int $nom_sel_nn = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('determination.nom_ret')]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nom_ret = null;
+
+    #[Groups(['observations'])]
+    #[SerializedName('determination.nom_ret_nn')]
     #[ORM\Column(nullable: true)]
     private ?int $nom_ret_nn = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('determination.nt')]
     #[ORM\Column(nullable: true)]
     private ?int $nt = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('determination.referentiel')]
+    #[ORM\Column(length: 25, nullable: true)]
+    private ?string $nom_referentiel = null;
+
+    #[Groups(['observations'])]
+    #[SerializedName('determination.famille')]
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $famille = null;
 
     #[Groups(['observations'])]
+    #[SerializedName('id_zone_geo')]
     #[ORM\Column(length: 5, nullable: true)]
     private ?string $ce_zone_geo = null;
 
@@ -231,10 +248,6 @@ class DelObservation
     #[Groups(['observations'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $milieu = null;
-
-    #[Groups(['observations'])]
-    #[ORM\Column(length: 25, nullable: true)]
-    private ?string $nom_referentiel = null;
 
     #[Groups(['observations'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
