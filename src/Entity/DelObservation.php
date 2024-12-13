@@ -14,7 +14,151 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: DelObservationRepository::class)]
 #[ApiResource(
     operations: [
-        new GetCollection(uriTemplate: '/observations', denormalizationContext: ['groups' => ['operations']], name: 'observation_all'),
+        new GetCollection(
+            uriTemplate: '/observations',
+            openapiContext: [
+            'summary' => 'Get paginated observations',
+            'description' => 'Get paginated observations',
+                'parameters' => [
+                    [
+                        'name' => 'navigation.depart',
+                        'in' => 'query',
+                        'description' => 'Starting index (page number -1, for example 0 for page 1)',
+                        'required' => false,
+                        'schema' => ['type' => 'integer'],
+                        'default' => 0,
+                    ],
+                    [
+                        'name' => 'navigation.limite',
+                        'in' => 'query',
+                        'description' => 'Number of results',
+                        'required' => false,
+                        'schema' => ['type' => 'integer'],
+                        'default' => 12,
+                    ],
+                    [
+                        'name' => 'ordre',
+                        'in' => 'query',
+                        'description' => 'select data by newer or older first (newer data: desc by default)',
+                        'required' => false,
+                        'schema' => [
+                            'type' => 'string',
+                            'enum' => ['desc', 'asc'],
+                        ],
+                    ],
+                    [
+                        'name' => 'tri',
+                        'in' => 'query',
+                        'description' => 'Select by wich field the result will be sorted (date_transmission by default)',
+                        'required' => false,
+                        'schema' => [
+                            'type' => 'string',
+                            'enum' => ['date_transmission', 'date_observation', 'nb_commentaires'],
+                        ],
+                    ],
+                    [
+                        'name' => 'type',
+                        'in' => 'query',
+                        'description' => 'Select the type of observations (tous by default)',
+                        'required' => false,
+                        'schema' => [
+                            'type' => 'string',
+                            'enum' => ['adeterminer', 'aconfirmer', 'validees', 'monactivite', 'tous'],
+                        ],
+                    ],
+                    [
+                        'name' => 'masque.pninscritsseulement',
+                        'in' => 'query',
+                        'description' => 'Only get result with registered user (true by default)',
+                        'required' => false,
+                        'schema' => ['type' => 'boolean']
+                    ],
+                    [
+                        'name' => 'masque',
+                        'in' => 'query',
+                        'description' => 'Free search of taxons',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.referentiel',
+                        'in' => 'query',
+                        'description' => 'search by referentiel',
+                        'required' => false,
+                        'schema' => [
+                            'type' => 'string',
+                            'enum' => ['bdtfx', 'bdtxa', 'bdtre', 'aublet', 'florical', "isfan", "apd", "lbf", "taxreflich", "taxref"],
+                        ],
+                    ],
+                    [
+                        'name' => 'masque.famille',
+                        'in' => 'query',
+                        'description' => 'search by taxon family',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.genre',
+                        'in' => 'query',
+                        'description' => 'search by taxon genre',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.ns',
+                        'in' => 'query',
+                        'description' => 'Search by taxon scientific name or id',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.date',
+                        'in' => 'query',
+                        'description' => 'Search by observation date (dd/mm/yyyy or yyyy)',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.pays',
+                        'in' => 'query',
+                        'description' => 'Search by observation country',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.departement',
+                        'in' => 'query',
+                        'description' => 'Search by observation region (France only)',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.commune',
+                        'in' => 'query',
+                        'description' => 'Search by observation city',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.auteur',
+                        'in' => 'query',
+                        'description' => 'Search by user',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.tag',
+                        'in' => 'query',
+                        'description' => 'Search by observation tags',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+
+                ],
+            ],
+            paginationEnabled: false,
+            denormalizationContext: ['groups' => ['operations']],
+            name: 'observation_all',),
         new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['operations']], name: 'observation_single'),
     ],
     formats: ["json"],
