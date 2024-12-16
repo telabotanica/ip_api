@@ -158,19 +158,19 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                 ],
             ],
             paginationEnabled: false,
-            denormalizationContext: ['groups' => ['operations']],
+            denormalizationContext: ['groups' => ['observations']],
             name: 'observation_all',),
-        new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['operations']], name: 'observation_single'),
+        new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['observations']], name: 'observation_single'),
     ],
     formats: ["json"],
     controller: DelObservationController::class
 )]
 class DelObservation
 {
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'commentaires'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(name: 'id_observation', type: 'bigint')]
     private ?int $id_observation = null;
 
     #[Groups(['observations'])]

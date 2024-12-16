@@ -10,10 +10,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: DelUtilisateurInfosRepository::class)]
 class DelUtilisateurInfos
 {
-    #[Groups(['user'])]
+    #[Groups(['user', 'commentaires'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(name: 'id_utilisateur', type: 'integer')]
     private ?int $id_utilisateur = null;
 
     #[Groups(['user'])]

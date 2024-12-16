@@ -2,43 +2,36 @@
 
 namespace App\Repository;
 
-use App\Entity\DelObservation;
+use App\Entity\DelCommentaire;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<DelObservation>
+ * @extends ServiceEntityRepository<DelCommentaire>
  */
-class DelObservationRepository extends ServiceEntityRepository
+class DelCommentaireRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, DelObservation::class);
+        parent::__construct($registry, DelCommentaire::class);
     }
 
-    public function findAllPaginated($criteres)
+    public function findAllPaginated(Array $criteres)
     {
-        $queryBuilder = $this->createQueryBuilder('o');
-
-        if (in_array($criteres['tri'], ['date_transmission', 'date_observation'], true)) {
-            $queryBuilder->orderBy('o.' . $criteres['tri'], $criteres['order']);
-        }
-
-        //TODO pour nb_commentaires
-
-        $queryBuilder
+        $queryBuilder = $this->createQueryBuilder('c')
+            ->orderBy('c.date', $criteres['order'])
             ->setMaxResults($criteres['limit'])
             ->setFirstResult($criteres['page']*$criteres['limit']);
 
         if ($criteres['pnInscrit'] == 1) {
-            $queryBuilder->andWhere('o.ce_utilisateur != 0');
+            $queryBuilder->andWhere('c.ce_utilisateur != 0');
         }
 
         return $queryBuilder->getQuery()->getResult();
     }
 
     //    /**
-    //     * @return DelObservation[] Returns an array of DelObservation objects
+    //     * @return DelCommentaire[] Returns an array of DelCommentaire objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -52,7 +45,7 @@ class DelObservationRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?DelObservation
+    //    public function findOneBySomeField($value): ?DelCommentaire
     //    {
     //        return $this->createQueryBuilder('d')
     //            ->andWhere('d.exampleField = :val')
