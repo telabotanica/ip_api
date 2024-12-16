@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Repository\DelCommentaireRepository;
+use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,12 +18,16 @@ class DelObservationController extends AbstractController
 {
     private EntityManagerInterface $em;
     private DelObservationRepository $obsRepository;
+    private DelCommentaireVoteRepository $voteRepository;
+    private DelCommentaireRepository $commentaireRepository;
     private SerializerInterface $serializer;
 
-    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer)
     {
         $this->em = $em;
         $this->obsRepository = $obsRepository;
+        $this->voteRepository = $voteRepository;
+        $this->commentaireRepository = $commentaireRepository;
         $this->serializer = $serializer;
     }
 
@@ -78,8 +84,36 @@ class DelObservationController extends AbstractController
             return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
+        //TODO ajouter les votes, commentaires et images
+
         $json = $this->serializer->serialize($obs, 'json', ['groups' => 'observations']);
 
         return new JsonResponse($json, Response::HTTP_OK, [], true);
+    }
+
+    // toutes les infos sur les votes d'une observation
+    #[Route('/observations/{id_observation}/vote', name: 'observation_vote', methods: ['GET'])]
+    public function GetObsVotes(int $id_observation): Response
+    {
+        $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $id_observation]);
+        $votes = [];
+
+        foreach ($commentaires as $commentaire) {
+            $votesBycomment = $this->voteRepository->findBy(['ce_proposition' => $commentaire->getIdCommentaire()]);
+            if ($votesBycomment) {
+                $votes += $votesBycomment;
+            }
+        }
+
+        return $this->json($votes, 200, [], ['groups' => ['votes']]);
+    }
+
+    // toutes les infos sur les votes d'une proposition
+    #[Route('/observations/{id_observation}/{id_commentaire}/vote', name: 'observation_vote', methods: ['GET'])]
+    public function GetPropositionVotes(int $id_observation, int $id_commentaire): Response
+    {
+        $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
+
+        return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }
 }

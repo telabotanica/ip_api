@@ -40,6 +40,7 @@ class DelCommentaireController extends AbstractController
         ];
 
         //TODO: ajouter filtre masque.auteur
+        //TODO: ajouter les commentaires.vote à la réponse
 
         $commentaires = $this->commentaireRepository->findAllPaginated($criteres);
 
