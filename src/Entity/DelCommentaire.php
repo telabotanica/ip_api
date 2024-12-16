@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Controller\DelCommentaireController;
 use App\Repository\DelCommentaireRepository;
 use Doctrine\DBAL\Types\Types;
@@ -14,6 +15,57 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 #[ORM\Entity(repositoryClass: DelCommentaireRepository::class)]
 #[ApiResource(
     operations: [
+        new GetCollection(
+            uriTemplate: '/commentaires',
+            openapiContext: [
+                'summary' => 'Get paginated comments',
+                'description' => 'Get paginated comments',
+                'parameters' => [
+                    [
+                        'name' => 'navigation.depart',
+                        'in' => 'query',
+                        'description' => 'Starting index (page number -1, for example 0 for page 1)',
+                        'required' => false,
+                        'schema' => ['type' => 'integer'],
+                        'default' => 0,
+                    ],
+                    [
+                        'name' => 'navigation.limite',
+                        'in' => 'query',
+                        'description' => 'Number of results',
+                        'required' => false,
+                        'schema' => ['type' => 'integer'],
+                        'default' => 12,
+                    ],
+                    [
+                        'name' => 'ordre',
+                        'in' => 'query',
+                        'description' => 'select data by newer or older first (newer data: desc by default)',
+                        'required' => false,
+                        'schema' => [
+                            'type' => 'string',
+                            'enum' => ['desc', 'asc'],
+                        ],
+                    ],
+                    [
+                        'name' => 'masque.pninscritsseulement',
+                        'in' => 'query',
+                        'description' => 'Only get result with registered user (true by default)',
+                        'required' => false,
+                        'schema' => ['type' => 'boolean']
+                    ],
+                    [
+                        'name' => 'masque.auteur',
+                        'in' => 'query',
+                        'description' => 'Search by user',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                ],
+            ],
+            paginationEnabled: false,
+            denormalizationContext: ['groups' => ['commentaires']],
+            name: 'commentaire_all',),
         new Get(uriTemplate: '/commentaires/{id_commentaire}', denormalizationContext: ['groups' => ['commentaires']], name: 'commentaire_single'),
     ],
     formats: ["json"],

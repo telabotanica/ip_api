@@ -39,6 +39,8 @@ class DelCommentaireController extends AbstractController
             'pnInscrit' => $request->query->get('masque_pninscritsseulement', 1),
         ];
 
+        //TODO: ajouter filtre masque.auteur
+
         $commentaires = $this->commentaireRepository->findAllPaginated($criteres);
 
         if (!$commentaires) {
