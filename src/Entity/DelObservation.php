@@ -161,6 +161,22 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['observations']],
             name: 'observation_all',),
         new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['observations']], name: 'observation_single'),
+        new Get(
+            uriTemplate: '/observations/{id_observation}/vote',
+            openapiContext: [
+                'summary' => 'Get observation votes',
+                'description' => 'Get observation votes',
+            ],
+            denormalizationContext: ['groups' => ['votes']],
+            name: 'observation_vote'),
+        new Get(
+            uriTemplate: '/observations/{id_observation}/{id_commentaire}/vote',
+            openapiContext: [
+                'summary' => 'Get all votes from a proposition',
+                'description' => 'Get all votes from a proposition',
+            ],
+            denormalizationContext: ['groups' => ['votes']],
+            name: 'proposition_vote'),
     ],
     formats: ["json"],
     controller: DelObservationController::class

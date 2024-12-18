@@ -4,8 +4,10 @@ namespace App\Service;
 
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-class Mapping
+class Mapping extends AbstractController
 {
     private DelCommentaireVoteRepository $voteRepository;
     private DelCommentaireRepository $commentaireRepository;
@@ -99,5 +101,56 @@ class Mapping
             'valeur' => $vote->getValeur(),
             'date' => $vote->getDate()->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function getObsEntetes(array $criteres): array
+    {
+        $navigation_depart = $criteres['navigation_depart'];
+        $navigation_limite = $criteres['navigation_limite'];
+        $new_depart = $navigation_depart - $navigation_limite;
+
+        if (($navigation_depart != 0) && ($new_depart <= 0)){
+            $new_depart = 0;
+        }
+
+        $href_precedent = $this->generateUrl('observation_all', [
+            'navigation_depart' => $new_depart,
+            'navigation_limite' => $navigation_limite,
+            'tri' => $criteres['tri'],
+            'ordre' => $criteres['ordre'],
+            'type' => $criteres['type']
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        if ($navigation_depart == 0){
+            $href_precedent = "";
+        }
+
+        $href_suivant = $this->generateUrl('observation_all', [
+            'navigation_depart' => $navigation_depart + $navigation_limite,
+            'navigation_limite' => $navigation_limite,
+            'tri' => $criteres['tri'],
+            'ordre' => $criteres['ordre'],
+            'type' => $criteres['type']
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $result = [
+            'entete' => [
+                'masque' => http_build_query($criteres),
+//                'total' => $total,
+                'depart' => $navigation_depart,
+                'limite' => $navigation_limite
+            ],
+            'resultats' => []
+        ];
+
+        if ($href_precedent){
+            $result['entete']['href.precedent'] = $href_precedent;
+        }
+
+        if ($href_suivant){
+            $result['entete']['href.suivant'] = $href_suivant;
+        }
+
+        return $result;
     }
 }

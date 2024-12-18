@@ -178,10 +178,10 @@ class DelCommentaire
         return $this->id_commentaire;
     }
 
-    public function getCeObservation(): ?DelObservation
-    {
-        return $this->ce_observation;
-    }
+//    public function getCeObservation(): ?DelObservation
+//    {
+//        return $this->ce_observation;
+//    }
 
     #[Groups(['commentaires'])]
     #[SerializedName('observation')]
@@ -231,10 +231,10 @@ class DelCommentaire
         return $this;
     }
 
-    public function getCeUtilisateur(): ?DelUtilisateurInfos
-    {
-        return $this->ce_utilisateur;
-    }
+//    public function getCeUtilisateur(): ?DelUtilisateurInfos
+//    {
+//        return $this->ce_utilisateur;
+//    }
 
     #[Groups(['commentaires'])]
     #[SerializedName('auteur.id')]

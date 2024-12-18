@@ -86,51 +86,9 @@ class DelObservationController extends AbstractController
 
         //TODO: faire un service pour les liens d'entete
         //TODO calculer le total et désactiver le href suivant si dernière page
-        $navigation_depart = $criteres['navigation_depart'];
-        $navigation_limite = $criteres['navigation_limite'];
-        $new_depart = $navigation_depart - $navigation_limite;
 
-        if (($navigation_depart != 0) && ($new_depart <= 0)){
-            $new_depart = 0;
-        }
-
-        $href_precedent = $this->generateUrl('observation_all', [
-            'navigation_depart' => $new_depart,
-            'navigation_limite' => $navigation_limite,
-            'tri' => $tri,
-            'ordre' => $order,
-            'type' => $type
-        ], UrlGeneratorInterface::ABSOLUTE_URL);
-
-        if ($navigation_depart == 0){
-            $href_precedent = "";
-        }
-
-        $href_suivant = $this->generateUrl('observation_all', [
-            'navigation_depart' => $navigation_depart + $navigation_limite,
-            'navigation_limite' => $navigation_limite,
-            'tri' => $tri,
-            'ordre' => $order,
-            'type' => $type
-        ], UrlGeneratorInterface::ABSOLUTE_URL);
-
-        $result = [
-            'entete' => [
-                'masque' => http_build_query($criteres),
-//                'total' => $total,
-                'depart' => $navigation_depart,
-                'limite' => $navigation_limite
-            ],
-            'resultats' => []
-        ];
-
-        if ($href_precedent){
-            $result['entete']['href.precedent'] = $href_precedent;
-        }
-
-        if ($href_suivant){
-            $result['entete']['href.suivant'] = $href_suivant;
-        }
+        // On map les obs de manière à ajouter l'entête
+        $result = $this->mapping->getObsEntetes($criteres);
 
         foreach ($observations_array as $obs_array){
             $obs_array['nb_commentaires'] = 0;

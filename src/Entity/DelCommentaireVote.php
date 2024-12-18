@@ -3,6 +3,10 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use App\Controller\DelCommentaireVoteController;
+use App\Controller\DelObservationController;
 use App\Repository\DelCommentaireVoteRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -10,7 +14,28 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: DelCommentaireVoteRepository::class)]
-//#[ApiResource]
+//#[ApiResource(
+//    operations: [
+//        new Get(
+//            uriTemplate: '/observations/{id_observation}/vote',
+//            openapiContext: [
+//                'summary' => 'Get observation votes',
+//                'description' => 'Get observation votes',
+//            ],
+//            denormalizationContext: ['groups' => ['votes']],
+//            name: 'observation_vote'),
+//        new Get(
+//            uriTemplate: '/observations/{id_observation}/{id_commentaire}/vote',
+//            openapiContext: [
+//                'summary' => 'Get all votes from a proposition',
+//                'description' => 'Get all votes from a proposition',
+//            ],
+//            denormalizationContext: ['groups' => ['votes']],
+//            name: 'proposition_vote'),
+//    ],
+//    formats: ["json"],
+//    controller: DelCommentaireVoteController::class
+//)]
 class DelCommentaireVote
 {
     #[Groups(['votes'])]
@@ -72,10 +97,10 @@ class DelCommentaireVote
         return $this->ce_utilisateur ? $this->ce_utilisateur->getIdUtilisateur() : null;
     }
 
-    public function getCeUtilisateur(): ?DelUtilisateurInfos
-    {
-        return $this->ce_utilisateur;
-    }
+//    public function getCeUtilisateur(): ?DelUtilisateurInfos
+//    {
+//        return $this->ce_utilisateur;
+//    }
 
     public function setCeUtilisateur(?DelUtilisateurInfos $ce_utilisateur): static
     {
