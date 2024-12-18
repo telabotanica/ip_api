@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
+use App\Service\ExternalRequests;
 use App\Service\Mapping;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,8 +25,9 @@ class DelObservationController extends AbstractController
     private DelCommentaireRepository $commentaireRepository;
     private SerializerInterface $serializer;
     private Mapping $mapping;
+    private ExternalRequests $externalRequests;
 
-    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer, Mapping $mapping)
+    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer, Mapping $mapping, ExternalRequests $externalRequests)
     {
         $this->em = $em;
         $this->obsRepository = $obsRepository;
@@ -33,6 +35,7 @@ class DelObservationController extends AbstractController
         $this->commentaireRepository = $commentaireRepository;
         $this->serializer = $serializer;
         $this->mapping = $mapping;
+        $this->externalRequests = $externalRequests;
     }
 
     #[Route('/observations', name: 'observation_all',methods:['GET'])]
@@ -112,7 +115,7 @@ class DelObservationController extends AbstractController
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $result = [
-            'entetes' => [
+            'entete' => [
                 'masque' => http_build_query($criteres),
 //                'total' => $total,
                 'depart' => $navigation_depart,
@@ -122,11 +125,11 @@ class DelObservationController extends AbstractController
         ];
 
         if ($href_precedent){
-            $result['entetes']['href.precedent'] = $href_precedent;
+            $result['entete']['href.precedent'] = $href_precedent;
         }
 
         if ($href_suivant){
-            $result['entetes']['href.suivant'] = $href_suivant;
+            $result['entete']['href.suivant'] = $href_suivant;
         }
 
         foreach ($observations_array as $obs_array){
@@ -182,11 +185,4 @@ class DelObservationController extends AbstractController
 
         return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }
-
-//    #[Route('/observations/ontologie/pays', name: 'pays', methods: ['GET'])]
-//    public function GetPays(): Response
-//    {
-//
-//        //dd($this->getParameter('URL_BASE'));
-//    }
 }

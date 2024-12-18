@@ -20,3 +20,5 @@ api_platform:
     collection:
         pagination:
             enabled: false
+    mapping:
+        paths: [ '%kernel.project_dir%/src/Entity' , '%kernel.project_dir%/src/Dto' ]

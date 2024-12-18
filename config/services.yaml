@@ -4,10 +4,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    URL_BASE: '%env(URL_BASE)%'
-    URL_SERVICE_BASE: '%env(URL_SERVICE_BASE)%'
-    URL_SERVICE_BASE_EFLORE: '%env(URL_SERVICE_BASE_EFLORE)%'
-    URL_SERVICE_UTILISATEUR: '%env(URL_SERVICE_UTILISATEUR)%'
+#    URL_BASE: '%env(URL_BASE)%'
+#    URL_SERVICE_BASE: '%env(URL_SERVICE_BASE)%'
+#    URL_SERVICE_BASE_EFLORE: '%env(URL_SERVICE_BASE_EFLORE)%'
+#    URL_SERVICE_UTILISATEUR: '%env(URL_SERVICE_UTILISATEUR)%'
 
 services:
     # default configuration for services in *this* file
@@ -26,3 +26,6 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Service\ExternalRequests:
+        arguments:
+            $urlServiceBaseEflore: '%env(URL_SERVICE_BASE_EFLORE)%'
