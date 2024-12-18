@@ -41,23 +41,7 @@ class DelObservationController extends AbstractController
     #[Route('/observations', name: 'observation_all',methods:['GET'])]
     public function index(Request $request, SerializerInterface $serializer, UrlValidator $urlValidator): JsonResponse
     {
-        $tri = $request->query->get('tri', 'date_transmission');
-        $tri = $urlValidator->validateTri($tri);
-
-        $order = $request->query->get('ordre', 'desc');
-        $order = $urlValidator->validateOrder($order);
-
-        $type = $request->query->get('type', 'tous');
-        $type = $urlValidator->validateType($type);
-
-        $criteres = [
-            'navigation_depart' => $request->query->get('navigation_depart', 0),
-            'navigation_limite' => $request->query->get('navigation_limite', 12),
-            'ordre' => $order,
-            'tri' => $tri,
-            'masque_pninscritsseulement' => $request->query->get('masque_pninscritsseulement', 1),
-            'type' => $type
-        ];
+        $criteres = $this->mapping->getUrlCriterias($request);
 
         //TODO prendre en compte le type
         //TODO gérer les critères de recherche
@@ -81,8 +65,6 @@ class DelObservationController extends AbstractController
 
         $json = $this->serializer->serialize($observations, 'json', ['groups' => 'observations']);
         $observations_array = json_decode($json, true);
-
-//        $total = $this->obsRepository->countByCriteria($criteres);
 
         //TODO: faire un service pour les liens d'entete
         //TODO calculer le total et désactiver le href suivant si dernière page

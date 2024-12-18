@@ -5,17 +5,20 @@ namespace App\Service;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class Mapping extends AbstractController
 {
     private DelCommentaireVoteRepository $voteRepository;
     private DelCommentaireRepository $commentaireRepository;
+    private UrlValidator $urlValidator;
 
-    public function __construct(DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository)
+    public function __construct(DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, UrlValidator $urlValidator)
     {
         $this->voteRepository = $voteRepository;
         $this->commentaireRepository = $commentaireRepository;
+        $this->urlValidator = $urlValidator;
     }
 
 
@@ -103,6 +106,27 @@ class Mapping extends AbstractController
         ];
     }
 
+    public function getUrlCriterias(Request $request): array
+    {
+        $tri = $request->query->get('tri', 'date_transmission');
+        $tri = $this->urlValidator->validateTri($tri);
+
+        $order = $request->query->get('ordre', 'desc');
+        $order = $this->urlValidator->validateOrder($order);
+
+        $type = $request->query->get('type', 'tous');
+        $type = $this->urlValidator->validateType($type);
+
+        return [
+            'navigation_depart' => $request->query->get('navigation_depart', 0),
+            'navigation_limite' => $request->query->get('navigation_limite', 12),
+            'ordre' => $order,
+            'tri' => $tri,
+            'masque_pninscritsseulement' => $request->query->get('masque_pninscritsseulement', 1),
+            'type' => $type
+        ];
+    }
+
     public function getObsEntetes(array $criteres): array
     {
         $navigation_depart = $criteres['navigation_depart'];
@@ -112,6 +136,8 @@ class Mapping extends AbstractController
         if (($navigation_depart != 0) && ($new_depart <= 0)){
             $new_depart = 0;
         }
+
+        //$total = $this->obsRepository->countByCriteria($criteres);
 
         $href_precedent = $this->generateUrl('observation_all', [
             'navigation_depart' => $new_depart,
