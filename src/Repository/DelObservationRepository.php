@@ -21,16 +21,17 @@ class DelObservationRepository extends ServiceEntityRepository
         $queryBuilder = $this->createQueryBuilder('o');
 
         if (in_array($criteres['tri'], ['date_transmission', 'date_observation'], true)) {
-            $queryBuilder->orderBy('o.' . $criteres['tri'], $criteres['order']);
+            $queryBuilder->orderBy('o.' . $criteres['tri'], $criteres['ordre']);
         }
 
         //TODO pour nb_commentaires
 
         $queryBuilder
-            ->setMaxResults($criteres['limit'])
-            ->setFirstResult($criteres['page']*$criteres['limit']);
+            ->setMaxResults($criteres['navigation_limite'])
+//            ->setFirstResult($criteres['page']*$criteres['limit']);
+            ->setFirstResult($criteres['navigation_depart']);
 
-        if ($criteres['pnInscrit'] == 1) {
+        if ($criteres['masque_pninscritsseulement'] == 1) {
             $queryBuilder->andWhere('o.ce_utilisateur != 0');
         }
 

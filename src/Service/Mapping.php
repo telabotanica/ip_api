@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Service;
+
+use App\Repository\DelCommentaireRepository;
+use App\Repository\DelCommentaireVoteRepository;
+
+class Mapping
+{
+    private DelCommentaireVoteRepository $voteRepository;
+    private DelCommentaireRepository $commentaireRepository;
+
+    public function __construct(DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository)
+    {
+        $this->voteRepository = $voteRepository;
+        $this->commentaireRepository = $commentaireRepository;
+    }
+
+
+    public function mapObservation(array $obs_array): array
+    {
+        $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $obs_array['id_observation']]);
+        if ($commentaires) {
+            $obs_array['commentaires'] = [];
+            $obs_array['nb_commentaires'] = count($commentaires);
+
+            foreach ($commentaires as $commentaire) {
+                // On map les commentaires
+                $commentaires_array = $this->mapCommentaire($commentaire);
+                $obs_array['commentaires'][$commentaire->getIdCommentaire()] = $commentaires_array;
+
+                // On ajoute les votes à chaque commentaire
+                $votes = $this->voteRepository->findBy(['ce_proposition' => $commentaire->getIdCommentaire()]);
+                if ($votes) {
+                    $votesParUtilisateur = [];
+
+                    // Regrouper les votes par utilisateur en ne conservant que le dernier
+                    foreach ($votes as $vote) {
+                        $auteurId = $vote->getAuteurId();
+                        if (!isset($votesParUtilisateur[$auteurId]) || $vote->getIdVote() > $votesParUtilisateur[$auteurId]->getIdVote()) {
+                            $votesParUtilisateur[$auteurId] = $vote;
+                        }
+                    }
+
+                    $obs_array['nb_commentaires'] += count($votesParUtilisateur);
+                    $obs_array['commentaires'][$commentaire->getIdCommentaire()]['votes'] = [];
+
+                    foreach ($votesParUtilisateur as $vote) {
+                        // On map les votes
+                        $vote_array = $this->mapVotes($vote);
+                        $obs_array['commentaires'][$commentaire->getIdCommentaire()]['votes'][$vote->getIdVote()] = $vote_array;
+                    }
+
+                }
+            }
+        }
+
+        return $obs_array;
+    }
+
+    public function mapCommentaire($commentaire): array
+    {
+        $array = [
+            'id_commentaire' => $commentaire->getIdCommentaire(),
+            'observation' => $commentaire->getObservation(),
+            'proposition' => $commentaire->getCeProposition(),
+            'id_parent' => $commentaire->getCeCommentaireParent(),
+            'texte' => $commentaire->getTexte(),
+            'auteur.id' => $commentaire->getAuteurId(),
+            'auteur.nom' => $commentaire->getUtilisateurNom(),
+            'auteur.prenom' => $commentaire->getUtilisateurPrenom(),
+            'auteur.courriel' => $commentaire->getUtilisateurCourriel(),
+            'nom_sel' => $commentaire->getNomSel(),
+            'nom_sel_nn' => $commentaire->getNomSelNn(),
+            'nom_ret' => $commentaire->getNomRet(),
+            'nom_ret_nn' => $commentaire->getNomRetNn(),
+            'nt' => $commentaire->getNt(),
+            'famille' => $commentaire->getFamille(),
+            'nom_referentiel' => $commentaire->getNomReferentiel(),
+            'proposition_initiale' => $commentaire->isPropositionInitiale(),
+            'proposition_retenue' => $commentaire->isPropositionRetenue(),
+            'date' => $commentaire->getDate()->format('Y-m-d H:i:s'),
+        ];
+
+        if ($commentaire->isPropositionRetenue()) {
+            $array['date_validation'] = $commentaire->getDateValidation()->format('Y-m-d H:i:s');
+            $array['validateur'] = $commentaire->getCeValidateur();
+        }
+
+        return $array;
+    }
+
+    public function mapVotes($vote):array
+    {
+        return [
+            'id_vote' => $vote->getIdVote(),
+            'proposition' => $vote->getProposition(),
+            'auteur.id' => $vote->getAuteurId(),
+            'valeur' => $vote->getValeur(),
+            'date' => $vote->getDate()->format('Y-m-d H:i:s'),
+        ];
+    }
+}

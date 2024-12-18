@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\DelCommentaireRepository;
+use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,12 +18,14 @@ class DelCommentaireController extends AbstractController
 {
     private EntityManagerInterface $em;
     private DelCommentaireRepository $commentaireRepository;
+    private DelCommentaireVoteRepository $voteRepository;
     private SerializerInterface $serializer;
 
-    public function __construct(EntityManagerInterface $em, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, DelCommentaireRepository $commentaireRepository, DelCommentaireVoteRepository $voteRepository, SerializerInterface $serializer)
     {
         $this->em = $em;
         $this->commentaireRepository = $commentaireRepository;
+        $this->voteRepository = $voteRepository;
         $this->serializer = $serializer;
     }
 
@@ -60,8 +63,20 @@ class DelCommentaireController extends AbstractController
             return new JsonResponse(['message' => 'Commentaire: '.$id_commentaire .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
+        //TODO: ajouter les commentaires.vote à la réponse
+        //TODO: ajouter les commentaires sur plusieurs niveaux
+
         $json = $this->serializer->serialize($obs, 'json', ['groups' => 'commentaires']);
 
         return new JsonResponse($json, Response::HTTP_OK, [], true);
+    }
+
+    // toutes les infos sur les votes d'un commentaire
+    #[Route('/commentaires/{id_commentaire}/vote', name: 'commentaire_vote', methods: ['GET'])]
+    public function GetCommentaireVotes(int $id_commentaire): Response
+    {
+        $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
+
+        return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }
 }

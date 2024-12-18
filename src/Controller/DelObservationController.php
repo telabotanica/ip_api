@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
+use App\Service\Mapping;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DelObservationController extends AbstractController
@@ -21,14 +23,16 @@ class DelObservationController extends AbstractController
     private DelCommentaireVoteRepository $voteRepository;
     private DelCommentaireRepository $commentaireRepository;
     private SerializerInterface $serializer;
+    private Mapping $mapping;
 
-    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer, Mapping $mapping)
     {
         $this->em = $em;
         $this->obsRepository = $obsRepository;
         $this->voteRepository = $voteRepository;
         $this->commentaireRepository = $commentaireRepository;
         $this->serializer = $serializer;
+        $this->mapping = $mapping;
     }
 
     #[Route('/observations', name: 'observation_all',methods:['GET'])]
@@ -44,11 +48,11 @@ class DelObservationController extends AbstractController
         $type = $urlValidator->validateType($type);
 
         $criteres = [
-            'page' => $request->query->get('navigation_depart', 0),
-            'limit' => $request->query->get('navigation_limite', 12),
-            'order' => $order,
+            'navigation_depart' => $request->query->get('navigation_depart', 0),
+            'navigation_limite' => $request->query->get('navigation_limite', 12),
+            'ordre' => $order,
             'tri' => $tri,
-            'pnInscrit' => $request->query->get('masque_pninscritsseulement', 1),
+            'masque_pninscritsseulement' => $request->query->get('masque_pninscritsseulement', 1),
             'type' => $type
         ];
 
@@ -66,14 +70,72 @@ class DelObservationController extends AbstractController
         //            "hauteur": "2400",
         //            "largeur": "3200",
         //            "nom_original": "D61_3011_908.JPG",
-        //TODO ajouter les commentaires (et les votes dans les commentaires)
         $observations = $this->obsRepository->findAllPaginated($criteres);
 
         if (!$observations) {
             return new JsonResponse(['message' => 'Pas d\'observations trouvées avec les critères spécifiés'], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json($observations, 200, [], ['groups' => ['observations']]);
+        $json = $this->serializer->serialize($observations, 'json', ['groups' => 'observations']);
+        $observations_array = json_decode($json, true);
+
+//        $total = $this->obsRepository->countByCriteria($criteres);
+
+        //TODO: faire un service pour les liens d'entete
+        //TODO calculer le total et désactiver le href suivant si dernière page
+        $navigation_depart = $criteres['navigation_depart'];
+        $navigation_limite = $criteres['navigation_limite'];
+        $new_depart = $navigation_depart - $navigation_limite;
+
+        if (($navigation_depart != 0) && ($new_depart <= 0)){
+            $new_depart = 0;
+        }
+
+        $href_precedent = $this->generateUrl('observation_all', [
+            'navigation_depart' => $new_depart,
+            'navigation_limite' => $navigation_limite,
+            'tri' => $tri,
+            'ordre' => $order,
+            'type' => $type
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        if ($navigation_depart == 0){
+            $href_precedent = "";
+        }
+
+        $href_suivant = $this->generateUrl('observation_all', [
+            'navigation_depart' => $navigation_depart + $navigation_limite,
+            'navigation_limite' => $navigation_limite,
+            'tri' => $tri,
+            'ordre' => $order,
+            'type' => $type
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $result = [
+            'entetes' => [
+                'masque' => http_build_query($criteres),
+//                'total' => $total,
+                'depart' => $navigation_depart,
+                'limite' => $navigation_limite
+            ],
+            'resultats' => []
+        ];
+
+        if ($href_precedent){
+            $result['entetes']['href.precedent'] = $href_precedent;
+        }
+
+        if ($href_suivant){
+            $result['entetes']['href.suivant'] = $href_suivant;
+        }
+
+        foreach ($observations_array as $obs_array){
+            $obs_array['nb_commentaires'] = 0;
+            $obs_array = $this->mapping->mapObservation($obs_array);
+            $result['resultats'][] = $obs_array;
+        }
+
+        return new JsonResponse($result, Response::HTTP_OK);
     }
 
     #[Route('/observations/{id_observation}', name: 'observation_single', methods: ['GET'])]
@@ -84,11 +146,15 @@ class DelObservationController extends AbstractController
             return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        //TODO ajouter les votes, commentaires et images
+        //TODO ajouter images
 
         $json = $this->serializer->serialize($obs, 'json', ['groups' => 'observations']);
+        $obs_array = json_decode($json, true);
+        $obs_array['nb_commentaires'] = 0;
 
-        return new JsonResponse($json, Response::HTTP_OK, [], true);
+        $obs_array = $this->mapping->mapObservation($obs_array);
+
+        return new JsonResponse($obs_array, Response::HTTP_OK);
     }
 
     // toutes les infos sur les votes d'une observation
@@ -109,11 +175,18 @@ class DelObservationController extends AbstractController
     }
 
     // toutes les infos sur les votes d'une proposition
-    #[Route('/observations/{id_observation}/{id_commentaire}/vote', name: 'observation_vote', methods: ['GET'])]
+    #[Route('/observations/{id_observation}/{id_commentaire}/vote', name: 'proposition_vote', methods: ['GET'])]
     public function GetPropositionVotes(int $id_observation, int $id_commentaire): Response
     {
         $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
 
         return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }
+
+//    #[Route('/observations/ontologie/pays', name: 'pays', methods: ['GET'])]
+//    public function GetPays(): Response
+//    {
+//
+//        //dd($this->getParameter('URL_BASE'));
+//    }
 }
