@@ -2,44 +2,47 @@
 
 namespace App\Repository;
 
-use App\Entity\DelObservation;
+use App\Entity\DelImage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<DelObservation>
+ * @extends ServiceEntityRepository<DelImage>
  */
-class DelObservationRepository extends ServiceEntityRepository
+class DelImageRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, DelObservation::class);
+        parent::__construct($registry, DelImage::class);
     }
 
     public function findAllPaginated($criteres)
     {
+        if (in_array($criteres['tri'], ['date_observation'], true)) {
+            $criteres['tri'] = 'date_creation';
+        }
         $queryBuilder = $this->createQueryBuilder('o');
 
-        if (in_array($criteres['tri'], ['date_transmission', 'date_observation'], true)) {
-            $queryBuilder->orderBy('o.' . $criteres['tri'], $criteres['ordre']);
-        }
-        //TODO pour nb_commentaires
         //TODO: ajouter les autres critères de recherche
 
         if ($criteres['masque_pninscritsseulement'] == 1) {
+            $queryBuilder->andWhere('o.ce_utilisateur IS NOT NULL');
             $queryBuilder->andWhere('o.ce_utilisateur != 0');
         }
 
         $queryBuilder
+            ->orderBy('o.' . $criteres['tri'], $criteres['ordre'])
             ->setMaxResults($criteres['navigation_limite'])
 //            ->setFirstResult($criteres['page']*$criteres['limit']);
             ->setFirstResult($criteres['navigation_depart']);
+
+
 
         return $queryBuilder->getQuery()->getResult();
     }
 
     //    /**
-    //     * @return DelObservation[] Returns an array of DelObservation objects
+    //     * @return DelImage[] Returns an array of DelImage objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -53,7 +56,7 @@ class DelObservationRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?DelObservation
+    //    public function findOneBySomeField($value): ?DelImage
     //    {
     //        return $this->createQueryBuilder('d')
     //            ->andWhere('d.exampleField = :val')

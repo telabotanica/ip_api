@@ -39,7 +39,7 @@ class DelObservationController extends AbstractController
     }
 
     #[Route('/observations', name: 'observation_all',methods:['GET'])]
-    public function index(Request $request, SerializerInterface $serializer, UrlValidator $urlValidator): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $criteres = $this->mapping->getUrlCriterias($request);
 

@@ -14,6 +14,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: DelCommentaireRepository::class)]
 #[ApiResource(
+    shortName: 'Commentaires',
     operations: [
         new GetCollection(
             uriTemplate: '/commentaires',

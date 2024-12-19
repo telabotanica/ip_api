@@ -14,6 +14,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: DelObservationRepository::class)]
 #[ApiResource(
+    shortName: 'Observations',
     operations: [
         new GetCollection(
             uriTemplate: '/observations',
@@ -24,7 +25,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                     [
                         'name' => 'navigation.depart',
                         'in' => 'query',
-                        'description' => 'Starting index (page number -1, for example 0 for page 1)',
+                        'description' => 'Starting index ',
                         'required' => false,
                         'schema' => ['type' => 'integer'],
                         'default' => 0,
