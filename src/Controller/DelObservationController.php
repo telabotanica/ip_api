@@ -66,7 +66,6 @@ class DelObservationController extends AbstractController
         $json = $this->serializer->serialize($observations, 'json', ['groups' => 'observations']);
         $observations_array = json_decode($json, true);
 
-        //TODO: faire un service pour les liens d'entete
         //TODO calculer le total et désactiver le href suivant si dernière page
 
         // On map les obs de manière à ajouter l'entête

@@ -7,7 +7,7 @@ parameters:
 #    URL_BASE: '%env(URL_BASE)%'
 #    URL_SERVICE_BASE: '%env(URL_SERVICE_BASE)%'
 #    URL_SERVICE_BASE_EFLORE: '%env(URL_SERVICE_BASE_EFLORE)%'
-#    URL_SERVICE_UTILISATEUR: '%env(URL_SERVICE_UTILISATEUR)%'
+#    $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'
 
 services:
     # default configuration for services in *this* file
@@ -29,3 +29,6 @@ services:
     App\Service\ExternalRequests:
         arguments:
             $urlServiceBaseEflore: '%env(URL_SERVICE_BASE_EFLORE)%'
+    App\Service\Mapping:
+        arguments:
+            $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'

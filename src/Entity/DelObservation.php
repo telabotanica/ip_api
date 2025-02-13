@@ -184,48 +184,48 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 )]
 class DelObservation
 {
-    #[Groups(['observations', 'commentaires'])]
+    #[Groups(['observations', 'commentaires', 'images'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_observation', type: 'bigint')]
     private ?int $id_observation = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('auteur.id')]
     #[ORM\Column(nullable: true)]
     private ?int $ce_utilisateur = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('auteur.nom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_utilisateur = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('auteur.prenom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $prenom_utilisateur = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('auteur.courriel')]
     #[ORM\Column(length: 155, nullable: true)]
     private ?string $courriel_utilisateur = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.ns')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_sel = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.nn')]
     #[ORM\Column(nullable: true)]
     private ?int $nom_sel_nn = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.nom_ret')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_ret = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.nom_ret_nn')]
     #[ORM\Column(nullable: true)]
     private ?int $nom_ret_nn = null;
@@ -235,42 +235,42 @@ class DelObservation
     #[ORM\Column(nullable: true)]
     private ?int $nt = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.referentiel')]
     #[ORM\Column(length: 25, nullable: true)]
     private ?string $nom_referentiel = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('determination.famille')]
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $famille = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[SerializedName('id_zone_geo')]
     #[ORM\Column(length: 5, nullable: true)]
     private ?string $ce_zone_geo = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $zone_geo = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $lieudit = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $station = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $milieu = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_observation = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $mots_cles_texte = null;
 
@@ -286,7 +286,7 @@ class DelObservation
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_modification = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_transmission = null;
 
@@ -294,7 +294,7 @@ class DelObservation
     #[ORM\Column(length: 25, nullable: true)]
     private ?string $certitude = null;
 
-    #[Groups(['observations'])]
+    #[Groups(['observations', 'images'])]
     #[ORM\Column(length: 150, nullable: true)]
     private ?string $pays = null;
 

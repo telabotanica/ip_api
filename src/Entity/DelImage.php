@@ -176,7 +176,7 @@ class DelImage
     #[ORM\Column(name: 'id_image', type: 'bigint')]
     private ?int $id_image = null;
 
-    #[Groups(['images'])]
+//    #[Groups(['images'])]
     #[SerializedName('auteur.id')]
     #[ORM\Column(nullable: true)]
     private ?int $ce_utilisateur = null;
@@ -191,11 +191,11 @@ class DelImage
 //    #[ORM\Column(length: 255)]
 //    private ?string $prenom_utilisateur = null;
 
-    #[Groups(['images'])]
+//    #[Groups(['images'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_utilisateur = null;
 
-    #[Groups(['images'])]
+//    #[Groups(['images'])]
     #[ORM\Column(length: 155, nullable: true)]
     private ?string $courriel_utilisateur = null;
 
@@ -256,17 +256,19 @@ class DelImage
         return $this;
     }
 
-//    public function getCeObservation(): ?DelObservation
-//    {
-//        return $this->ce_observation;
-//    }
-
     #[Groups(['images'])]
     #[SerializedName('observation')]
-    public function getObservation(): ?int
+    public function getCeObservation(): ?DelObservation
     {
-        return $this->ce_observation ? $this->ce_observation->getIdObservation() : null;
+        return $this->ce_observation;
     }
+
+//    #[Groups(['images'])]
+//    #[SerializedName('observation')]
+//    public function getObservation(): ?int
+//    {
+//        return $this->ce_observation ? $this->ce_observation->getIdObservation() : null;
+//    }
 
     public function setCeObservation(?DelObservation $ce_observation): static
     {

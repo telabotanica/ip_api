@@ -26,16 +26,32 @@ class DelObservationRepository extends ServiceEntityRepository
         //TODO pour nb_commentaires
         //TODO: ajouter les autres critères de recherche
 
-        if ($criteres['masque_pninscritsseulement'] == 1) {
+        if ($criteres['masque.pninscritsseulement'] == 1) {
             $queryBuilder->andWhere('o.ce_utilisateur != 0');
         }
 
         $queryBuilder
-            ->setMaxResults($criteres['navigation_limite'])
+            ->setMaxResults($criteres['navigation.limite'])
 //            ->setFirstResult($criteres['page']*$criteres['limit']);
-            ->setFirstResult($criteres['navigation_depart']);
+            ->setFirstResult($criteres['navigation.depart']);
 
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    public function findTotalByCriterieas($criteres)
+    {
+        $queryBuilder = $this->createQueryBuilder('o');
+
+        //TODO: ajouter les autres critères de recherche
+
+        if ($criteres['masque.pninscritsseulement'] == 1) {
+            $queryBuilder->andWhere('o.ce_utilisateur != 0');
+        }
+
+        // retourne le nombre de lignes
+        return $queryBuilder->select('count(o.id_observation)')
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     //    /**
