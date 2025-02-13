@@ -25,16 +25,16 @@ class DelImageRepository extends ServiceEntityRepository
 
         //TODO: ajouter les autres critères de recherche
 
-        if ($criteres['masque_pninscritsseulement'] == 1) {
+        if ($criteres['masque.pninscritsseulement'] == 1) {
             $queryBuilder->andWhere('o.ce_utilisateur IS NOT NULL');
             $queryBuilder->andWhere('o.ce_utilisateur != 0');
         }
 
         $queryBuilder
             ->orderBy('o.' . $criteres['tri'], $criteres['ordre'])
-            ->setMaxResults($criteres['navigation_limite'])
+            ->setMaxResults($criteres['navigation.limite'])
 //            ->setFirstResult($criteres['page']*$criteres['limit']);
-            ->setFirstResult($criteres['navigation_depart']);
+            ->setFirstResult($criteres['navigation.depart']);
 
 
 

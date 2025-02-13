@@ -45,18 +45,7 @@ class DelObservationController extends AbstractController
 
         //TODO prendre en compte le type
         //TODO gérer les critères de recherche
-        //TODO ajouter entetes ({"masque":"navigation.depart=0&navigation.limite=12&masque.type=adeterminer&masque=betula&masque.pninscritsseulement=0",
-        //"total":66,
-        //"depart":0,
-        //"limite":12,
-        //"href.suivant":"http:\/\/api-test2.tela-botanica.org\/service:del:0.1\/observations?navigation.depart=12&navigation.limite=12&masque.type=adeterminer&masque=betula&masque.pninscritsseulement=0"})
-        //TODO ajouter les images et mots_cles_texte_img
-        //TODO ajouter 1ere image:
-        //            "id_image": "1235453",
-        //            "date": "2020-06-26 15:36:08",
-        //            "hauteur": "2400",
-        //            "largeur": "3200",
-        //            "nom_original": "D61_3011_908.JPG",
+
         $observations = $this->obsRepository->findAllPaginated($criteres);
 
         if (!$observations) {
@@ -65,8 +54,6 @@ class DelObservationController extends AbstractController
 
         $json = $this->serializer->serialize($observations, 'json', ['groups' => 'observations']);
         $observations_array = json_decode($json, true);
-
-        //TODO calculer le total et désactiver le href suivant si dernière page
 
         // On map les obs de manière à ajouter l'entête
         $result = $this->mapping->getObsEntetes($criteres);
@@ -87,8 +74,6 @@ class DelObservationController extends AbstractController
         if (!$obs) {
             return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
         }
-
-        //TODO ajouter images
 
         $json = $this->serializer->serialize($obs, 'json', ['groups' => 'observations']);
         $obs_array = json_decode($json, true);
