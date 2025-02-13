@@ -1,6 +1,12 @@
 api_platform:
     title: Identiplante API
+    description: API pour l'outil Identiplante
     version: 2.0.0
+    openapi:
+        contact:
+            name: "Contact"
+            url: "https://www.tela-botanica.org/appli:identiplante"
+            email: "identiplante_remarques@tela-botanica.org"
     formats:
         jsonld: ['application/ld+json']
         json: [ 'application/json' ]

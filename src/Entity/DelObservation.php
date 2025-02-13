@@ -20,7 +20,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             uriTemplate: '/observations',
             openapiContext: [
             'summary' => 'Get paginated observations',
-            'description' => 'Get paginated observations',
+            'description' => 'Charge les observations pour les outils de DEL et principalement pour Identiplante',
                 'parameters' => [
                     [
                         'name' => 'navigation.depart',

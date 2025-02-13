@@ -1,13 +1,11 @@
 monolog:
     handlers:
         main:
-            #            type: fingers_crossed
             action_level: error
             handler: nested
-            excluded_http_codes: [ 404, 405 ]
             type: rotating_file
             path: '%kernel.logs_dir%/%kernel.environment%.log'
-            level: debug
+            level: error
             max_files: 10
         console:
             type: console
