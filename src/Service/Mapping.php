@@ -174,17 +174,20 @@ class Mapping extends AbstractController
         $type = $request->query->get('masque_type', 'tous');
         $type = $this->urlValidator->validateType($type);
 
-        return [
+        $criterias = [
             'navigation.depart' => $request->query->get('navigation_depart', 0),
             'navigation.limite' => $request->query->get('navigation_limite', 12),
             'ordre' => $order,
             'tri' => $tri,
             'masque.pninscritsseulement' => $request->query->get('masque_pninscritsseulement', 1),
-            'masque.type' => $type
+            'masque.type' => $type,
+            'masque.standard' => $request->query->get('masque_standard', '1')
         ];
+
+        return $criterias;
     }
 
-    public function getObsEntetes(array $criteres): array
+    public function getObsEntetes(array $criteres, array $filters): array
     {
         $navigation_depart = $criteres['navigation.depart'];
         $navigation_limite = $criteres['navigation.limite'];
@@ -194,7 +197,7 @@ class Mapping extends AbstractController
             $new_depart = 0;
         }
 
-        $total = $this->obsRepository->findTotalByCriterieas($criteres);
+        $total = $this->obsRepository->findTotalByCriterieas($criteres, $filters);
         $href_precedent = "";
         $href_suivant = "";
 

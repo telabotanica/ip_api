@@ -26,8 +26,9 @@ class DelObservationController extends AbstractController
     private SerializerInterface $serializer;
     private Mapping $mapping;
     private ExternalRequests $externalRequests;
+    private UrlValidator $urlValidator;
 
-    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer, Mapping $mapping, ExternalRequests $externalRequests)
+    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, SerializerInterface $serializer, Mapping $mapping, ExternalRequests $externalRequests, UrlValidator $urlValidator)
     {
         $this->em = $em;
         $this->obsRepository = $obsRepository;
@@ -36,17 +37,18 @@ class DelObservationController extends AbstractController
         $this->serializer = $serializer;
         $this->mapping = $mapping;
         $this->externalRequests = $externalRequests;
+        $this->urlValidator = $urlValidator;
     }
 
     #[Route('/observations', name: 'observation_all',methods:['GET'])]
     public function index(Request $request): JsonResponse
     {
         $criteres = $this->mapping->getUrlCriterias($request);
+        $filters = $this->urlValidator->mapUrlParameters($request);
 
-        //TODO prendre en compte le type
-        //TODO gérer les critères de recherche
+        //TODO gérer tous les critères de recherche
 
-        $observations = $this->obsRepository->findAllPaginated($criteres);
+        $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
 
         if (!$observations) {
             return new JsonResponse(['message' => 'Pas d\'observations trouvées avec les critères spécifiés'], Response::HTTP_NOT_FOUND);
@@ -56,7 +58,7 @@ class DelObservationController extends AbstractController
         $observations_array = json_decode($json, true);
 
         // On map les obs de manière à ajouter l'entête
-        $result = $this->mapping->getObsEntetes($criteres);
+        $result = $this->mapping->getObsEntetes($criteres, $filters);
 
         foreach ($observations_array as $obs_array){
             $obs_array['nb_commentaires'] = 0;

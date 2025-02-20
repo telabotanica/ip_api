@@ -7,6 +7,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use App\Controller\DelObservationController;
 use App\Repository\DelObservationRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -305,6 +306,9 @@ class DelObservation
     #[Groups(['observations'])]
     #[ORM\Column(nullable: true)]
     private ?bool $donnees_standard = null;
+
+    #[ORM\OneToMany(targetEntity: DelCommentaire::class, mappedBy: "ce_observation")]
+    private ?Collection $commentaires;
 
     public function getIdObservation(): ?int
     {
