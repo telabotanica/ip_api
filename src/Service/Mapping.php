@@ -6,6 +6,7 @@ use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelImageRepository;
 use App\Repository\DelObservationRepository;
+use App\Repository\DelUtilisateurInfosRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -16,15 +17,17 @@ class Mapping extends AbstractController
     private DelCommentaireRepository $commentaireRepository;
     private DelObservationRepository $obsRepository;
     private DelImageRepository $imageRepository;
+    private DelUtilisateurInfosRepository $userRepository;
     private UrlValidator $urlValidator;
     private string $cel_img_url_tpl;
 
-    public function __construct(DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, DelObservationRepository $obsRepository, DelImageRepository $imageRepository, UrlValidator $urlValidator, string $cel_img_url_tpl)
+    public function __construct(DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, DelObservationRepository $obsRepository, DelImageRepository $imageRepository, DelUtilisateurInfosRepository $userRepository, UrlValidator $urlValidator, string $cel_img_url_tpl)
     {
         $this->voteRepository = $voteRepository;
         $this->commentaireRepository = $commentaireRepository;
         $this->obsRepository = $obsRepository;
         $this->imageRepository = $imageRepository;
+        $this->userRepository = $userRepository;
         $this->urlValidator = $urlValidator;
         $this->cel_img_url_tpl = $cel_img_url_tpl;
     }
@@ -55,23 +58,36 @@ class Mapping extends AbstractController
 
     public function addCommentsToObs($commentaire, array $obs_array): array
     {
-        $commentaires_array = $this->mapCommentaire($commentaire);
+        $commentaires_array = $this->findVotesByCommentaire($commentaire);
         $obs_array['commentaires'][$commentaire->getIdCommentaire()] = $commentaires_array;
 
-        // On ajoute les votes à chaque commentaire
-        $votes = $this->voteRepository->findBy(['ce_proposition' => $commentaire->getIdCommentaire()]);
-        if ($votes) {
-            $votesParUtilisateur = [];
-            $votesParUtilisateur = $this->regroupVotesByUser($votes, $votesParUtilisateur);
-
-            $obs_array['nb_commentaires'] += count($votesParUtilisateur);
-            $obs_array['commentaires'][$commentaire->getIdCommentaire()]['votes'] = [];
-
-            $obs_array = $this->addVotesToComment($votesParUtilisateur, $commentaire, $obs_array);
+        // On rajoute le nbre de votes au nbr total de commentaire
+        if (isset($obs_array['commentaires'][$commentaire->getIdCommentaire()]['votes'])) {
+            $obs_array['nb_commentaires'] += count($obs_array['commentaires'][$commentaire->getIdCommentaire()]['votes']);
         }
+
         return $obs_array;
     }
 
+    public function findVotesByCommentaire($commentaire): array
+    {
+        $commentaire_array = $this->mapCommentaire($commentaire);
+        $votes = $this->voteRepository->findBy(['ce_proposition' => $commentaire->getIdCommentaire()]);
+
+        if (!$votes) {
+            return $commentaire_array;
+        }
+
+        $votesParUtilisateur = [];
+        $votesParUtilisateur = $this->regroupVotesByUser($votes, $votesParUtilisateur);
+        $commentaire_array['votes'] = [];
+        foreach ($votesParUtilisateur as $vote) {
+            $vote_array = $this->mapVotes($vote);
+            $commentaire_array['votes'][$vote->getIdVote()] = $vote_array;
+        }
+        return $commentaire_array;
+    }
+/*
     public function addVotesToComment($votesParUtilisateur, $commentaire, $obs_array): array
     {
         foreach ($votesParUtilisateur as $vote) {
@@ -81,6 +97,7 @@ class Mapping extends AbstractController
 
         return $obs_array;
     }
+*/
 
     // Regrouper les votes par utilisateur en ne conservant que le dernier
     public function regroupVotesByUser($votes, $votesParUtilisateur): array
@@ -128,12 +145,21 @@ class Mapping extends AbstractController
 
     public function mapVotes($vote):array
     {
+        $user = null;
+        if ( $vote->getAuteurId() != '0'){
+            $user=$this->userRepository->findOneBy(['id_utilisateur' => $vote->getAuteurId()]);
+        }
+
         return [
             'id_vote' => $vote->getIdVote(),
             'proposition' => $vote->getProposition(),
             'auteur.id' => $vote->getAuteurId(),
             'valeur' => $vote->getValeur(),
             'date' => $vote->getDate()->format('Y-m-d H:i:s'),
+            'auteur.nom' => $user?->getNom(),
+            'auteur.prenom' => $user?->getPrenom(),
+            'auteur.courriel' => $user?->getCourriel(),
+            'auteur.intitule' => $user?->getIntitule(),
         ];
     }
 

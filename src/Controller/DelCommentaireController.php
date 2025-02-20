@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
+use App\Service\Mapping;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,13 +21,15 @@ class DelCommentaireController extends AbstractController
     private DelCommentaireRepository $commentaireRepository;
     private DelCommentaireVoteRepository $voteRepository;
     private SerializerInterface $serializer;
+    private Mapping $mapping;
 
-    public function __construct(EntityManagerInterface $em, DelCommentaireRepository $commentaireRepository, DelCommentaireVoteRepository $voteRepository, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, DelCommentaireRepository $commentaireRepository, DelCommentaireVoteRepository $voteRepository, SerializerInterface $serializer, Mapping $mapping)
     {
         $this->em = $em;
         $this->commentaireRepository = $commentaireRepository;
         $this->voteRepository = $voteRepository;
         $this->serializer = $serializer;
+        $this->mapping = $mapping;
     }
 
     #[Route('/commentaires', name: 'commentaire_all', methods: ['GET'])]
@@ -43,7 +46,7 @@ class DelCommentaireController extends AbstractController
         ];
 
         //TODO: ajouter filtre masque.auteur
-        //TODO: ajouter les commentaires.vote à la réponse
+        //TODO: ajouter les commentaires sur plusieurs niveaux
 
         $commentaires = $this->commentaireRepository->findAllPaginated($criteres);
 
@@ -51,24 +54,26 @@ class DelCommentaireController extends AbstractController
             return new JsonResponse(['message' => 'Pas de commentaires trouvés avec les critères spécifiés'], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json($commentaires, 200, [], ['groups' => ['commentaires']]);
+        foreach ($commentaires as $key => $commentaire) {
+            $commentaires[$key] = $this->mapping->findVotesByCommentaire($commentaire);
+        }
 
+        return new JsonResponse($commentaires, Response::HTTP_OK);
     }
 
     #[Route('/commentaires/{id_commentaire}', name: 'commentaire_single', methods: ['GET'])]
     public function GetOneComment(int $id_commentaire): Response
     {
-        $obs = $this->commentaireRepository->findOneBy(['id_commentaire' => $id_commentaire]);
-        if (!$obs) {
+        $commentaire = $this->commentaireRepository->findOneBy(['id_commentaire' => $id_commentaire]);
+        if (!$commentaire) {
             return new JsonResponse(['message' => 'Commentaire: '.$id_commentaire .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        //TODO: ajouter les commentaires.vote à la réponse
+        $commentaire = $this->mapping->findVotesByCommentaire($commentaire);
+
         //TODO: ajouter les commentaires sur plusieurs niveaux
 
-        $json = $this->serializer->serialize($obs, 'json', ['groups' => 'commentaires']);
-
-        return new JsonResponse($json, Response::HTTP_OK, [], true);
+        return new JsonResponse($commentaire, Response::HTTP_OK);
     }
 
     // toutes les infos sur les votes d'un commentaire
@@ -76,6 +81,10 @@ class DelCommentaireController extends AbstractController
     public function GetCommentaireVotes(int $id_commentaire): Response
     {
         $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
+
+        if (!$votes) {
+            return new JsonResponse(['message' => 'Pas de votes trouvés avec les critères spécifiés'], Response::HTTP_NOT_FOUND);
+        }
 
         return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }

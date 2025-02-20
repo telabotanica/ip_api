@@ -52,10 +52,10 @@ class DelCommentaireVote
     private ?DelCommentaire $ce_proposition = null;
 
     #[Groups(['votes'])]
-    #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class)]
+//    #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class)]
     #[SerializedName('auteur.id')]
-    #[ORM\JoinColumn(name: 'ce_utilisateur', referencedColumnName: 'id_utilisateur',nullable: false)]
-    private ?DelUtilisateurInfos $ce_utilisateur = null;
+    #[ORM\Column(type: 'string', nullable: false)]
+    private ?string $ce_utilisateur = null;
 
     #[Groups(['votes'])]
     #[SerializedName('vote')]
@@ -92,9 +92,9 @@ class DelCommentaireVote
 
     #[Groups(['votes'])]
     #[SerializedName('auteur.id')]
-    public function getAuteurId(): ?int
+    public function getAuteurId(): ?string
     {
-        return $this->ce_utilisateur ? $this->ce_utilisateur->getIdUtilisateur() : null;
+        return $this->ce_utilisateur;
     }
 
 //    public function getCeUtilisateur(): ?DelUtilisateurInfos
@@ -102,7 +102,7 @@ class DelCommentaireVote
 //        return $this->ce_utilisateur;
 //    }
 
-    public function setCeUtilisateur(?DelUtilisateurInfos $ce_utilisateur): static
+    public function setCeUtilisateur(?string $ce_utilisateur): static
     {
         $this->ce_utilisateur = $ce_utilisateur;
 
