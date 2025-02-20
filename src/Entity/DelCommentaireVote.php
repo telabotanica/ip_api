@@ -38,31 +38,31 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 //)]
 class DelCommentaireVote
 {
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[SerializedName('vote.id')]
     #[ORM\Column(name: 'id_vote', type: 'bigint')]
     private ?int $id_vote = null;
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[ORM\ManyToOne]
     #[SerializedName('proposition.id')]
     #[ORM\JoinColumn(name: 'ce_proposition', referencedColumnName: 'id_commentaire',nullable: false)]
     private ?DelCommentaire $ce_proposition = null;
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
 //    #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class)]
     #[SerializedName('auteur.id')]
     #[ORM\Column(type: 'string', nullable: false)]
     private ?string $ce_utilisateur = null;
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[SerializedName('vote')]
     #[ORM\Column(type: Types::SMALLINT, length: 1)]
     private ?int $valeur = null;
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date = null;
 
@@ -76,7 +76,7 @@ class DelCommentaireVote
         return $this->ce_proposition;
     }
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[SerializedName('proposition.id')]
     public function getProposition(): ?int
     {
@@ -90,7 +90,7 @@ class DelCommentaireVote
         return $this;
     }
 
-    #[Groups(['votes'])]
+    #[Groups(['votes', 'commentaires'])]
     #[SerializedName('auteur.id')]
     public function getAuteurId(): ?string
     {

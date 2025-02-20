@@ -622,4 +622,9 @@ class DelObservation
 
         return $this;
     }
+
+    public function getImages(): ?array
+    {
+        return $this->images;
+    }
 }

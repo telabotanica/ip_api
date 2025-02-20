@@ -174,6 +174,9 @@ class DelCommentaire
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_validation = null;
 
+//    #[Groups(['commentaires'])]
+//    private ?array $votes = null;
+
     public function getIdCommentaire(): ?int
     {
         return $this->id_commentaire;
@@ -441,6 +444,11 @@ class DelCommentaire
         $this->ce_proposition = $ce_proposition;
 
         return $this;
+    }
+
+    public function getVotes(): ?array
+    {
+        return $this->votes;
     }
 
 

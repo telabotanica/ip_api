@@ -14,7 +14,7 @@ class DelUtilisateurInfos
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_utilisateur', type: 'string')]
-    private ?int $id_utilisateur = null;
+    private int|string|null $id_utilisateur = null;
 
     #[Groups(['user'])]
     #[ORM\Column(length: 128, nullable: true)]
@@ -48,7 +48,7 @@ class DelUtilisateurInfos
     #[ORM\Column(type: Types::BOOLEAN)]
     private ?bool $admin = null;
 
-    public function getIdUtilisateur(): ?string
+    public function getIdUtilisateur(): string|int
     {
         return $this->id_utilisateur;
     }
