@@ -46,8 +46,6 @@ class DelObservationController extends AbstractController
         $criteres = $this->mapping->getUrlCriterias($request);
         $filters = $this->urlValidator->mapUrlParameters($request);
 
-        //TODO gérer tous les critères de recherche
-
         $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
 
         if (!$observations) {

@@ -23,7 +23,6 @@ class DelObservationRepository extends ServiceEntityRepository
             ->groupBy('o.id_observation');
 
         $queryBuilder = $this->addTriToQueryBuilder($queryBuilder, $criteres);
-
         $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type']);
         $queryBuilder = $this->addInscritsSeulementToQueryBuilder($queryBuilder, $criteres['masque.pninscritsseulement']);
         $queryBuilder = $this->addFiltersToQueryBuilder($queryBuilder, $filters);
@@ -107,7 +106,11 @@ class DelObservationRepository extends ServiceEntityRepository
                     ->orWhere('o.famille LIKE :masque')
                     ->orWhere('o.nom_utilisateur LIKE :masque')
                     ->orWhere('o.courriel_utilisateur LIKE :masque')
-                    ->setParameter('masque', '%' . $filter->getValue() . '%');;
+                    ->setParameter('masque', '%' . $filter->getValue() . '%');
+            } else if ($filter->getQueryParameter() == 'masque_departement') {
+                $queryBuilder
+                    ->andWhere('SUBSTRING(o.ce_zone_geo, 1, 2) = :departement')
+                    ->setParameter('departement', substr($filter->getValue(), 0, 2));
             } else if ($filter->getIsExact()) {
                 $queryBuilder->andWhere('o.' . $filter->getBddColumn() . ' = :' . $filter->getQueryParameter())
                     ->setParameter($filter->getQueryParameter(), $filter->getValue());

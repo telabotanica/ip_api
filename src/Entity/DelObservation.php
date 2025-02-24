@@ -79,7 +79,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                     [
                         'name' => 'masque',
                         'in' => 'query',
-                        'description' => 'Free search of taxons',
+                        'description' => 'Free search by taxon or author',
                         'required' => false,
                         'schema' => ['type' => 'string']
                     ],
@@ -103,16 +103,44 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                     [
                         'name' => 'masque.genre',
                         'in' => 'query',
-                        'description' => 'search by taxon genre',
+                        'description' => 'search by taxon genre (alias for nom_sel)',
                         'required' => false,
                         'schema' => ['type' => 'string']
                     ],
                     [
-                        'name' => 'masque.ns',
+                        'name' => 'masque.nom_ret',
                         'in' => 'query',
-                        'description' => 'Search by taxon scientific name or id',
+                        'description' => 'Search by taxon scientific name',
                         'required' => false,
                         'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.nom_ret_nn',
+                        'in' => 'query',
+                        'description' => 'Search by taxon scientific id',
+                        'required' => false,
+                        'schema' => ['type' => 'integer']
+                    ],
+                    [
+                        'name' => 'masque.ns',
+                        'in' => 'query',
+                        'description' => 'Search by taxon scientific id',
+                        'required' => false,
+                        'schema' => ['type' => 'integer']
+                    ],
+                    [
+                        'name' => 'masque.nom_sel',
+                        'in' => 'query',
+                        'description' => 'Search by selected taxon scientific name',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.nom_sel_nn',
+                        'in' => 'query',
+                        'description' => 'Search by selected taxon scientific id',
+                        'required' => false,
+                        'schema' => ['type' => 'integer']
                     ],
                     [
                         'name' => 'masque.date',
@@ -125,6 +153,13 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                         'name' => 'masque.pays',
                         'in' => 'query',
                         'description' => 'Search by observation country',
+                        'required' => false,
+                        'schema' => ['type' => 'string']
+                    ],
+                    [
+                        'name' => 'masque.cp',
+                        'in' => 'query',
+                        'description' => 'Search by observation post code',
                         'required' => false,
                         'schema' => ['type' => 'string']
                     ],
