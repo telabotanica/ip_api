@@ -69,11 +69,10 @@ class DelObservationController extends AbstractController
             $this->completerInfosUtilisateur();
 
             $criteres['user'] = $this->user;
+            $observations = $this->obsRepository->findMonActivite($criteres);
+        } else {
+            $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
         }
-
-//        dd($this->user);
-
-        $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
 
         if (!$observations) {
             return new JsonResponse(['error' => 'Pas d\'observations trouvées avec les critères spécifiés'], Response::HTTP_NOT_FOUND);

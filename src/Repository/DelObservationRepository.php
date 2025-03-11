@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\DelCommentaire;
 use App\Entity\DelObservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -49,9 +50,13 @@ class DelObservationRepository extends ServiceEntityRepository
 
         $queryBuilder = $this->createQueryBuilder('o');
 
-        $queryBuilder = $this->addInscritsSeulementToQueryBuilder($queryBuilder, $criteres['masque.pninscritsseulement']);
-        $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type'], $userId);
-        $queryBuilder = $this->addFiltersToQueryBuilder($queryBuilder, $filters);
+        if ($criteres['masque.type'] == 'monactivite'){
+            $queryBuilder = $this->countMonActivite($queryBuilder, $criteres);
+        } else {
+            $queryBuilder = $this->addInscritsSeulementToQueryBuilder($queryBuilder, $criteres['masque.pninscritsseulement']);
+            $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type'], $userId);
+            $queryBuilder = $this->addFiltersToQueryBuilder($queryBuilder, $filters);
+        }
 
         return $queryBuilder->select('count(o.id_observation)')
             ->getQuery()
@@ -85,13 +90,14 @@ class DelObservationRepository extends ServiceEntityRepository
             $queryBuilder->andWhere('o.certitude = :certitude')
                 ->setParameter('certitude', 'certain');
         }
-
+/*
         if ($type == 'monactivite') {
             $queryBuilder
                 ->andWhere('o.ce_utilisateur = :utilisateur')
-//                ->orWhere('c.ce_utilisateur = :utilisateur')
+                ->orWhere('c.ce_utilisateur = :utilisateur')
                 ->setParameter('utilisateur', $userId);
         }
+*/
 
         return $queryBuilder;
     }
@@ -135,6 +141,74 @@ class DelObservationRepository extends ServiceEntityRepository
         if ($pninscritsseulement == 1) {
             $queryBuilder->andWhere('o.ce_utilisateur != 0');
         }
+
+        return $queryBuilder;
+    }
+
+    public function findMonActivite($criteres){
+        $userId = null;
+        if (isset($criteres['user'])) {
+            $userId = $criteres['user']['id_utilisateur'];
+        }
+
+        $queryBuilder = $this->createQueryBuilder('o')
+            ->groupBy('o.id_observation');
+
+        // Récupérer les commentaires de l'utilisateur
+        $commentaireObservationIds = $this->getEntityManager()
+            ->getRepository(DelCommentaire::class)
+            ->createQueryBuilder('c')
+            ->select('IDENTITY(c.ce_observation) as ce_observation') // Utilisez IDENTITY pour référencer correctement le champ
+            ->where('c.ce_utilisateur = :utilisateur')
+            ->setParameter('utilisateur', $userId)
+            ->groupBy('c.ce_observation')
+            ->getQuery()
+            ->getResult();
+
+        // Extraire les IDs des observations des commentaires
+        $commentaireObservationIds = array_column($commentaireObservationIds, 'ce_observation');
+
+        // Ajouter les critères de tri
+        $queryBuilder = $this->addTriToQueryBuilder($queryBuilder, $criteres);
+
+        // Ajouter les conditions pour les observations de l'utilisateur ou des commentaires
+        $queryBuilder
+            ->andWhere('o.ce_utilisateur = :utilisateur OR o.id_observation IN (:commentaireObservationIds)')
+            ->setParameter('utilisateur', $userId)
+            ->setParameter('commentaireObservationIds', $commentaireObservationIds);
+
+        // Appliquer la pagination
+        $queryBuilder
+            ->setMaxResults($criteres['navigation.limite'])
+            ->setFirstResult($criteres['navigation.depart']);
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    public function countMonActivite($queryBuilder, $criteres){
+        $userId = null;
+        if (isset($criteres['user'])) {
+            $userId = $criteres['user']['id_utilisateur'];
+        }
+
+        // Récupérer les commentaires de l'utilisateur
+        $commentaireObservationIds = $this->getEntityManager()
+            ->getRepository(DelCommentaire::class)
+            ->createQueryBuilder('c')
+            ->select('IDENTITY(c.ce_observation) as ce_observation') // Utilisez IDENTITY pour référencer correctement le champ
+            ->where('c.ce_utilisateur = :utilisateur')
+            ->setParameter('utilisateur', $userId)
+            ->groupBy('c.ce_observation')
+            ->getQuery()
+            ->getResult();
+
+        // Extraire les IDs des observations des commentaires
+        $commentaireObservationIds = array_column($commentaireObservationIds, 'ce_observation');
+
+        $queryBuilder
+            ->andWhere('o.ce_utilisateur = :utilisateur OR o.id_observation IN (:commentaireObservationIds)')
+            ->setParameter('utilisateur', $userId)
+            ->setParameter('commentaireObservationIds', $commentaireObservationIds);
 
         return $queryBuilder;
     }
