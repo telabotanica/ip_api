@@ -32,3 +32,8 @@ services:
     App\Service\Mapping:
         arguments:
             $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'
+    App\Service\AnnuaireService:
+        arguments:
+            - '%env(SSO_ANNUAIRE_URL)%'
+            - '%env(ANNUAIRE_COOKIE_NAME)%'
+            - '%env(IGNORE_SSL_ISSUES)%'

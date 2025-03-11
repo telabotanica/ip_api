@@ -18,12 +18,17 @@ class DelObservationRepository extends ServiceEntityRepository
 
     public function findAllPaginated($criteres, $filters)
     {
+        $userId = null;
+        if (isset($criteres['user'])) {
+            $userId = $criteres['user']['id_utilisateur'];
+        }
+
         $queryBuilder = $this->createQueryBuilder('o')
             ->leftJoin('o.commentaires', 'c')
             ->groupBy('o.id_observation');
 
         $queryBuilder = $this->addTriToQueryBuilder($queryBuilder, $criteres);
-        $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type']);
+        $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type'], $userId);
         $queryBuilder = $this->addInscritsSeulementToQueryBuilder($queryBuilder, $criteres['masque.pninscritsseulement']);
         $queryBuilder = $this->addFiltersToQueryBuilder($queryBuilder, $filters);
 
@@ -37,10 +42,15 @@ class DelObservationRepository extends ServiceEntityRepository
 
     public function findTotalByCriterieas($criteres, $filters)
     {
+        $userId = null;
+        if (isset($criteres['user'])) {
+            $userId = $criteres['user']['id_utilisateur'];
+        }
+
         $queryBuilder = $this->createQueryBuilder('o');
 
         $queryBuilder = $this->addInscritsSeulementToQueryBuilder($queryBuilder, $criteres['masque.pninscritsseulement']);
-        $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type']);
+        $queryBuilder = $this->addTypeToQueryBuilder($queryBuilder, $criteres['masque.type'], $userId);
         $queryBuilder = $this->addFiltersToQueryBuilder($queryBuilder, $filters);
 
         return $queryBuilder->select('count(o.id_observation)')
@@ -59,7 +69,7 @@ class DelObservationRepository extends ServiceEntityRepository
         return $queryBuilder;
     }
 
-    private function addTypeToQueryBuilder($queryBuilder, $type)
+    private function addTypeToQueryBuilder($queryBuilder, $type, $userId = null)
     {
         if ($type == 'adeterminer') {
             $queryBuilder->andWhere('o.certitude = :certitude')
@@ -77,11 +87,9 @@ class DelObservationRepository extends ServiceEntityRepository
         }
 
         if ($type == 'monactivite') {
-            //TODO: rechercher l'id de l'utilisateur sur les cookies
-            $userId = '';
             $queryBuilder
                 ->andWhere('o.ce_utilisateur = :utilisateur')
-                ->orWhere('c.ce_utilisateur = :utilisateur')
+//                ->orWhere('c.ce_utilisateur = :utilisateur')
                 ->setParameter('utilisateur', $userId);
         }
 

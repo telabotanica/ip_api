@@ -60,7 +60,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                         ],
                     ],
                     [
-                        'name' => 'type',
+                        'name' => 'masque.type',
                         'in' => 'query',
                         'description' => 'Select the type of observations (tous by default)',
                         'required' => false,
