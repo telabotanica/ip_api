@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\DelUtilisateurInfosRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,7 +14,8 @@ class DelUtilisateurInfos
 {
     #[Groups(['user', 'commentaires'])]
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+//    #[ORM\GeneratedValue]
+    #[ApiProperty(identifier: true)]
     #[ORM\Column(name: 'id_utilisateur', type: 'string')]
     private int|string|null $id_utilisateur = null;
 
@@ -45,12 +48,26 @@ class DelUtilisateurInfos
     private ?\DateTimeInterface $date_derniere_consultation_evenements = null;
 
     #[Groups(['user'])]
-    #[ORM\Column(type: Types::BOOLEAN)]
-    private ?bool $admin = null;
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $admin = null;
+
+//    public function __toString() {
+//        return "DelUtilisateurInfos with ID: " . $this->getIdUtilisateur();
+//    }
+
+    public function getId(): string|int|null
+    {
+        return $this->getIdUtilisateur();
+    }
 
     public function getIdUtilisateur(): string|int
     {
         return $this->id_utilisateur;
+    }
+
+    public function setIdUtilisateur(int|string|null $id_utilisateur): void
+    {
+        $this->id_utilisateur = $id_utilisateur;
     }
 
     public function getIntitule(): ?string

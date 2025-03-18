@@ -143,6 +143,68 @@ class Mapping extends AbstractController
         return $array;
     }
 
+    public function mapNewCommentaire(array $commentaire): array
+    {
+        $array = [
+            'observation' => $commentaire['observation'],
+            'texte' => $commentaire['texte'],
+            'utilisateur_nom' => $commentaire['auteur.nom'],
+            'utilisateur_prenom' => $commentaire['auteur.prenom'],
+            'utilisateur_courriel' => $commentaire['auteur.courriel']
+        ];
+
+        if ( isset($commentaire['proposition'])){
+            $array['ce_proposition'] = $commentaire['proposition'];
+        } else {
+            $array['ce_proposition'] = 0;
+        }
+
+        if ( isset($commentaire['auteur.id'])){
+            $array['ce_utillisateur'] = $commentaire['auteur.id'];
+        }
+
+        if (isset($commentaire['id_parent'])){
+            $array['ce_commentaire_parent'] = $commentaire['id_parent'];
+        } else {
+            $array['ce_commentaire_parent'] = "0";
+        }
+
+        if (isset($commentaire['nom_sel'])){
+            $array['nom_sel'] = $commentaire['nom_sel'];
+        }
+
+        if (isset($commentaire['nom_sel_nn'])){
+            $array['nom_sel_nn'] = $commentaire['nom_sel_nn'];
+        }
+
+        if (isset($commentaire['nom_ret'])){
+            $array['nom_ret'] = $commentaire['nom_ret'];
+        }
+
+        if (isset($commentaire['nom_ret_nn'])){
+            $array['nom_ret_nn'] = $commentaire['nom_ret_nn'];
+        }
+
+        if (isset($commentaire['nt'])){
+            $array['nt'] = $commentaire['nt'];
+        }
+
+        if (isset($commentaire['famille'])){
+            $array['famille'] = $commentaire['famille'];
+        }
+
+        if (isset($commentaire['nom_referentiel'])){
+            $array['nom_referentiel'] = $commentaire['nom_referentiel'];
+        }
+
+//        if (isset($commentaire['date_validation'])){
+//            $array['date_validation'] = $commentaire['date_validation'];
+//            $array['validateur'] = $commentaire['validateur'];
+//        }
+
+        return $array;
+    }
+
     public function mapVotes($vote):array
     {
         $user = null;

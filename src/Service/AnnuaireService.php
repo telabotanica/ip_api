@@ -3,20 +3,38 @@
 namespace App\Service;
 
 use App\Model\User;
+use App\Repository\DelCommentaireRepository;
+use App\Repository\DelUtilisateurInfosRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class AnnuaireService
 {
+    private EntityManagerInterface $em;
+    private SerializerInterface $serializer;
     private string $cookieName;
     private string $ssoAnnuaireUrl;
+    private DelUtilisateurInfosRepository $delUserRepository;
+    private DelCommentaireRepository $commentaireRepository;
 
     public function __construct(
+        EntityManagerInterface $em,
+        SerializerInterface $serializer,
         string $ssoAnnuaireUrl,
         string $annuaireCookieName,
+        DelUtilisateurInfosRepository $delUserRepository,
+        DelCommentaireRepository $commentaireRepository
     ) {
+        $this->em = $em;
+        $this->serializer = $serializer;
         $this->ssoAnnuaireUrl = $ssoAnnuaireUrl;
         $this->cookieName = $annuaireCookieName;
+        $this->delUserRepository = $delUserRepository;
+        $this->commentaireRepository = $commentaireRepository;
     }
 
     public function verifierJeton(string $token)
@@ -40,8 +58,8 @@ class AnnuaireService
 //        $client = HttpClient::create();
         $client = new HttpBrowser();
         $error = null;
-//        $client->request('GET', $this->ssoAnnuaireUrl.'identite?token='.$token);
-        $client->request('GET', $this->ssoAnnuaireUrl.'identite', [
+        $client->request('GET', $this->ssoAnnuaireUrl.'identite?token='.$token, [
+//        $client->request('GET', $this->ssoAnnuaireUrl.'identite', [
             'headers' => [
                 'Authorization' => $token,
             ],
@@ -137,5 +155,80 @@ class AnnuaireService
             'admin' => '0',
             'session_id' => session_id()
         );
+    }
+
+    public function getUtilisateurAuthentifie($request): Response
+    {
+        $authHeader = $request->headers->get('Authorization') ?? null;
+
+        $jetonValide = $this->verifierJeton($authHeader);
+        if (!$jetonValide) {
+            return new JsonResponse(['error' => 'Le token est invalide ou a expiré'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $jetonDecode = $this->decodeToken($authHeader);
+        if ($jetonDecode == null || !isset($jetonDecode['sub']) || $jetonDecode['sub'] == '') {
+            return new JsonResponse(['error' => 'Erreur lors du décodage du jeton'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
+        if ($user == null) {
+            //1ere connexion au del
+            if (!$user->getPreferences()) {
+                $user->setPreferences('{"mail_notification_mes_obs":"1","mail_notification_toutes_obs":"0"}');
+            }
+            $user->setDatePremiereUtilisation(new \DateTime());
+            $user->setDateDerniereConsultationEvenements(new \DateTime());
+
+            $this->em->persist($user);
+            $this->em->flush();
+            $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
+        } else {
+            // Vérifier si le profil a changé
+            $profilUpdated = $this->profilAChange($user, $jetonDecode);
+            if ($profilUpdated) {
+                $this->updateLocalProfil($user, $jetonDecode);
+                $this->updateCommentsUserInfos($jetonDecode);
+                $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
+            }
+        }
+        // On transforme l'id en string sinon la deserialization ne marche pas
+        $user->setIdUtilisateur((string)$user->getIdUtilisateur());
+
+//        $json = $this->serializer->serialize($user, 'json', ['groups' => 'user']);
+
+//        return new Response($json, Response::HTTP_OK);
+        return new Response($user->getIdUtilisateur(), Response::HTTP_OK);
+    }
+
+    private function updateLocalProfil($user, $jetonDecode): bool
+    {
+        $user->setNom($jetonDecode['nom']);
+        $user->setPrenom($jetonDecode['prenom']);
+        $user->setIntitule($jetonDecode['intitule']);
+        $user->setCourriel($jetonDecode['sub']);
+
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return true;
+    }
+
+    private function updateCommentsUserInfos($jetonDecode): bool
+    {
+        if ($jetonDecode != null && $jetonDecode['id'] != '' && ($jetonDecode['nom'] != '' || $jetonDecode['prenom'] != '')){
+            $userComments = $this->commentaireRepository->findBy(['ce_utilisateur' => $jetonDecode['id']]);
+
+            if ($userComments){
+                foreach ($userComments as $commentaire) {
+                    $commentaire->setNom($jetonDecode['nom']);
+                    $commentaire->setPrenom($jetonDecode['prenom']);
+                    $this->em->persist($commentaire);
+                }
+                $this->em->flush();
+            };
+//            $this->em->flush();
+        }
+        return true;
     }
 }

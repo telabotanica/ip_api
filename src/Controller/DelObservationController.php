@@ -55,7 +55,7 @@ class DelObservationController extends AbstractController
         $filters = $this->urlValidator->mapUrlParameters($request);
 
         if ($criteres['masque.type'] == 'monactivite') {
-            $auth = $this->getUtilisateurAuthentifie($request);
+            $auth = $this->annuaire->getUtilisateurAuthentifie($request);
 
             if ($auth->getStatusCode() != 200) {
                 return new JsonResponse(['error' => 'Vous devez être connecté pour accéder à cette page'], Response::HTTP_UNAUTHORIZED);
@@ -134,78 +134,6 @@ class DelObservationController extends AbstractController
         $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
 
         return $this->json($votes, 200, [], ['groups' => ['votes']]);
-    }
-
-    private function getUtilisateurAuthentifie($request): Response
-    {
-        $authHeader = $request->headers->get('Authorization') ?? null;
-
-        $jetonValide = $this->annuaire->verifierJeton($authHeader);
-        if (!$jetonValide) {
-            return new JsonResponse(['error' => 'Le token est invalide ou a expiré'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $jetonDecode = $this->annuaire->decodeToken($authHeader);
-        if ($jetonDecode == null || !isset($jetonDecode['sub']) || $jetonDecode['sub'] == '') {
-            return new JsonResponse(['error' => 'Erreur lors du décodage du jeton'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
-        if ($user == null) {
-            //1ere connexion au del
-            if (!$user->getPreferences()) {
-                $user->setPreferences('{"mail_notification_mes_obs":"1","mail_notification_toutes_obs":"0"}');
-            }
-            $user->setDatePremiereUtilisation(new \DateTime());
-            $user->setDateDerniereConsultationEvenements(new \DateTime());
-
-            $this->em->persist($user);
-            $this->em->flush();
-            $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
-        } else {
-            // Vérifier si le profil a changé
-            $profilUpdated = $this->annuaire->profilAChange($user, $jetonDecode);
-            if ($profilUpdated) {
-                $this->updateLocalProfil($user, $jetonDecode);
-                $this->updateCommentsUserInfos($jetonDecode);
-                $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $jetonDecode['id']]);
-            }
-        }
-
-        $json = $this->serializer->serialize($user, 'json', ['groups' => 'user']);
-
-        return new Response($json, Response::HTTP_OK);
-    }
-
-    private function updateLocalProfil($user, $jetonDecode): bool
-    {
-        $user->setNom($jetonDecode['nom']);
-        $user->setPrenom($jetonDecode['prenom']);
-        $user->setIntitule($jetonDecode['intitule']);
-        $user->setCourriel($jetonDecode['sub']);
-
-        $this->em->persist($user);
-        $this->em->flush();
-
-        return true;
-    }
-
-    private function updateCommentsUserInfos($jetonDecode): bool
-    {
-        if ($jetonDecode != null && $jetonDecode['id'] != '' && ($jetonDecode['nom'] != '' || $jetonDecode['prenom'] != '')){
-            $userComments = $this->commentaireRepository->findBy(['ce_utilisateur' => $jetonDecode['id']]);
-
-            if ($userComments){
-                foreach ($userComments as $commentaire) {
-                    $commentaire->setNom($jetonDecode['nom']);
-                    $commentaire->setPrenom($jetonDecode['prenom']);
-                    $this->em->persist($commentaire);
-                }
-                $this->em->flush();
-            };
-            $this->em->flush();
-        }
-        return true;
     }
 
     protected function completerInfosUtilisateur() {

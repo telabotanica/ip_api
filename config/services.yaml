@@ -8,6 +8,7 @@ parameters:
 #    URL_SERVICE_BASE: '%env(URL_SERVICE_BASE)%'
 #    URL_SERVICE_BASE_EFLORE: '%env(URL_SERVICE_BASE_EFLORE)%'
 #    $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'
+#    annuaire_cookie_name: '%env(ANNUAIRE_COOKIE_NAME)%'
 
 services:
     # default configuration for services in *this* file
@@ -34,6 +35,6 @@ services:
             $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'
     App\Service\AnnuaireService:
         arguments:
-            - '%env(SSO_ANNUAIRE_URL)%'
-            - '%env(ANNUAIRE_COOKIE_NAME)%'
-            - '%env(IGNORE_SSL_ISSUES)%'
+            $ssoAnnuaireUrl: '%env(SSO_ANNUAIRE_URL)%'
+            $annuaireCookieName: '%env(ANNUAIRE_COOKIE_NAME)%'
+#            $ignoreSSLIssues: '%env(IGNORE_SSL_ISSUES)%'

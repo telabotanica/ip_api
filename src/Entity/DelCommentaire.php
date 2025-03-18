@@ -2,9 +2,11 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Put;
 use App\Controller\DelCommentaireController;
 use App\Repository\DelCommentaireRepository;
 use Doctrine\DBAL\Types\Types;
@@ -68,6 +70,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['commentaires']],
             name: 'commentaire_all',),
         new Get(uriTemplate: '/commentaires/{id_commentaire}', denormalizationContext: ['groups' => ['commentaires']], name: 'commentaire_single'),
+        new Put(uriTemplate: '/commentaires/', denormalizationContext: ['groups' => ['commentaires']], name: 'put_commentaire'),
     ],
     formats: ["json"],
     controller: DelCommentaireController::class
@@ -78,7 +81,8 @@ class DelCommentaire
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_commentaire', type: 'bigint')]
-    private ?int $id_commentaire = null;
+    #[ApiProperty(identifier: true)]
+    private int|string|null $id_commentaire = null;
 
     #[Groups(['commentaires'])]
     #[SerializedName('observation')]
@@ -108,9 +112,12 @@ class DelCommentaire
 
     #[Groups(['commentaires'])]
     #[SerializedName('auteur.id')]
+//    #[ORM\Column(nullable: false)]
     #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class)]
+//    #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class, cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'ce_utilisateur', referencedColumnName: 'id_utilisateur',nullable: false)]
     private ?DelUtilisateurInfos $ce_utilisateur = null;
+//    private ?int $ce_utilisateur = null;
 
     #[Groups(['commentaires'])]
     #[SerializedName('auteur.prenom')]
@@ -177,7 +184,13 @@ class DelCommentaire
 //    #[Groups(['commentaires'])]
 //    private ?array $votes = null;
 
-    public function getIdCommentaire(): ?int
+    public function getId(): int|string|null
+    {
+        return $this->id_commentaire;
+    }
+
+
+    public function getIdCommentaire(): int|string|null
     {
         return $this->id_commentaire;
     }
