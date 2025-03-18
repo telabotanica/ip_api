@@ -177,6 +177,37 @@ class DelCommentaireController extends AbstractController
         return new JsonResponse($json, Response::HTTP_CREATED, [], true);
     }
 
+    #[Route('/commentaires/{id_commentaire}', name: 'delete_commentaire', methods: ['DELETE'])]
+    public function DeleteOneComment(Request $request, int|string $id_commentaire): Response
+    {
+        $commentaire = $this->commentaireRepository->findOneBy(['id_commentaire' => (int)$id_commentaire]);
+        if (!$commentaire) {
+            return new JsonResponse(['message' => 'Commentaire: '.$id_commentaire .' introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $auth = $this->annuaire->getUtilisateurAuthentifie($request);
+        if ($auth->getStatusCode() != 200) {
+            return new JsonResponse(['message' => 'Vous devez vous connecter pour supprimer ce commentaire '], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
+        if ( $user->getIdUtilisateur() != $commentaire->getAuteurId() && $user->getAdmin() < 2){
+            return new JsonResponse(['message' => 'Vous n\'êtes pas autorisé à supprimer ce commentaire '], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $childs = $this->commentaireRepository->findBy(['ce_commentaire_parent' => $id_commentaire]);
+        if ($childs){
+            return new JsonResponse(['message' => 'Le commentaire: '.$id_commentaire .' ne peut pas être supprimé car des commentaires enfants existent'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $this->em->remove($commentaire);
+        $this->em->flush();
+
+        $json = json_encode(["ok" => 'Commentaire '. $id_commentaire .' supprimé'], true);
+
+        return new JsonResponse($json, Response::HTTP_ACCEPTED);
+    }
+
     protected function completerInfosUtilisateur() {
         $this->user['session_id'] = session_id();
         $this->user['connecte'] = true;

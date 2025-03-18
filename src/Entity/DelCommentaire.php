@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Put;
@@ -71,6 +72,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             name: 'commentaire_all',),
         new Get(uriTemplate: '/commentaires/{id_commentaire}', denormalizationContext: ['groups' => ['commentaires']], name: 'commentaire_single'),
         new Put(uriTemplate: '/commentaires/', denormalizationContext: ['groups' => ['commentaires_post']], name: 'put_commentaire'),
+        new Delete(uriTemplate: '/commentaires/{id_commentaire}', denormalizationContext: ['groups' => ['commentaires']], name: 'delete_commentaire'),
     ],
     formats: ["json"],
     controller: DelCommentaireController::class
