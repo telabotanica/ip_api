@@ -70,7 +70,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['commentaires']],
             name: 'commentaire_all',),
         new Get(uriTemplate: '/commentaires/{id_commentaire}', denormalizationContext: ['groups' => ['commentaires']], name: 'commentaire_single'),
-        new Put(uriTemplate: '/commentaires/', denormalizationContext: ['groups' => ['commentaires']], name: 'put_commentaire'),
+        new Put(uriTemplate: '/commentaires/', denormalizationContext: ['groups' => ['commentaires_post']], name: 'put_commentaire'),
     ],
     formats: ["json"],
     controller: DelCommentaireController::class
@@ -84,18 +84,18 @@ class DelCommentaire
     #[ApiProperty(identifier: true)]
     private int|string|null $id_commentaire = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('observation')]
     #[ORM\JoinColumn(name: 'ce_observation', referencedColumnName: 'id_observation', nullable: false)]
     #[ORM\ManyToOne(targetEntity: DelObservation::class)]
     private ?DelObservation $ce_observation = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('proposition')]
     #[ORM\Column]
     private ?int $ce_proposition = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('id_parent')]
     #[ORM\Column(type: Types::BIGINT)]
     private ?string $ce_commentaire_parent = null;
@@ -106,11 +106,11 @@ class DelCommentaire
 //    private ?self $ce_commentaire_parent = null;
 
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $texte = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('auteur.id')]
 //    #[ORM\Column(nullable: false)]
     #[ORM\ManyToOne(targetEntity: DelUtilisateurInfos::class)]
@@ -119,26 +119,26 @@ class DelCommentaire
     private ?DelUtilisateurInfos $ce_utilisateur = null;
 //    private ?int $ce_utilisateur = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('auteur.prenom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $utilisateur_prenom = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('auteur.nom')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $utilisateur_nom = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[SerializedName('auteur.courriel')]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $utilisateur_courriel = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_sel = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_sel_nn = null;
 
@@ -156,7 +156,7 @@ class DelCommentaire
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $famille = null;
 
-    #[Groups(['commentaires'])]
+    #[Groups(['commentaires', 'commentaires_post'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom_referentiel = null;
 

@@ -147,7 +147,6 @@ class Mapping extends AbstractController
     {
         $array = [
             'observation' => $commentaire['observation'],
-            'texte' => $commentaire['texte'],
             'utilisateur_nom' => $commentaire['auteur.nom'],
             'utilisateur_prenom' => $commentaire['auteur.prenom'],
             'utilisateur_courriel' => $commentaire['auteur.courriel']
@@ -157,6 +156,10 @@ class Mapping extends AbstractController
             $array['ce_proposition'] = $commentaire['proposition'];
         } else {
             $array['ce_proposition'] = 0;
+        }
+
+        if ( isset($commentaire['texte'])){
+            $array['texte'] = $commentaire['texte'];
         }
 
         if ( isset($commentaire['auteur.id'])){

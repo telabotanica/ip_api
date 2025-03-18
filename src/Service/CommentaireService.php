@@ -31,6 +31,10 @@ class CommentaireService
             $erreurs[] = $this->verifierParamsAuteurAnonyme($parametres, $erreurs);
         }
 
+        if (!isset($parametres['nom_sel_nn']) && (!isset($parametres['texte']) || trim($parametres['texte']) == '')) {
+            $erreurs[] = "Le paramètre «texte» est obligatoire et ne doit pas être vide pour ajouter un commentaire.";
+        }
+
         $erreurs = $this->verifierParamsTaxonNonVide($parametres, $erreurs);
 
         if (isset($parametres['nom_sel_nn']) && (!isset($parametres['nom_referentiel']) || !isset($parametres['nom_sel']) )) {
