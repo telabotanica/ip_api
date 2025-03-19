@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Put;
 use App\Controller\DelObservationController;
 use App\Repository\DelObservationRepository;
 use Doctrine\Common\Collections\Collection;
@@ -214,6 +215,43 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             ],
             denormalizationContext: ['groups' => ['votes']],
             name: 'proposition_vote'),
+        new Put(
+            uriTemplate: '/observations/{id_observation}/{id_proposition}/vote',
+            openapiContext: [
+                'summary' => 'Vote for a proposition',
+                'description' => 'Vote for a proposition (utilisateur & valeur necessary in the body)',
+                'requestBody' => [
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'utilisateur' => ['type' => 'integer'],
+                                    'valeur' => ['type' => 'string', 'enum' => ['0', '1']],
+                                ],
+                                'required' => ['utilisateur', 'valeur'],
+                            ],
+                        ],
+                    ],
+                ],
+                'responses' => [
+                    '201' => [
+                        'description' => 'id_commentaire',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'id_commentaire' => ['type' => 'integer'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            denormalizationContext: ['groups' => ['observations_vote']],
+            name: 'voter')
     ],
     formats: ["json"],
     controller: DelObservationController::class

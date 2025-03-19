@@ -162,6 +162,10 @@ class AnnuaireService
     {
         $authHeader = $request->headers->get('Authorization') ?? null;
 
+        if (!$authHeader){
+            return new JsonResponse(['error' => 'Le header Authorization est obligatoire'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $jetonValide = $this->verifierJeton($authHeader);
         if (!$jetonValide) {
             return new JsonResponse(['error' => 'Le token est invalide ou a expiré'], Response::HTTP_UNAUTHORIZED);

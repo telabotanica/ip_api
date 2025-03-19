@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\DelCommentaireVote;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelObservationRepository;
 use App\Repository\DelUtilisateurInfosRepository;
 use App\Service\AnnuaireService;
+use App\Service\CommentaireService;
 use App\Service\ExternalRequests;
 use App\Service\Mapping;
 use App\Service\UrlValidator;
@@ -30,10 +32,24 @@ class DelObservationController extends AbstractController
     private Mapping $mapping;
     private ExternalRequests $externalRequests;
     private UrlValidator $urlValidator;
+    private CommentaireService $commentaireService;
     private AnnuaireService $annuaire;
     private array $user = [];
 
-    public function __construct(EntityManagerInterface $em, DelObservationRepository $obsRepository, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository, DelUtilisateurInfosRepository $delUserRepository, SerializerInterface $serializer, Mapping $mapping, ExternalRequests $externalRequests, UrlValidator $urlValidator, AnnuaireService $annuaire, array $user = [])
+    public function __construct(
+        EntityManagerInterface $em,
+        DelObservationRepository $obsRepository,
+        DelCommentaireVoteRepository $voteRepository,
+        DelCommentaireRepository $commentaireRepository,
+        DelUtilisateurInfosRepository $delUserRepository,
+        SerializerInterface $serializer,
+        Mapping $mapping,
+        ExternalRequests $externalRequests,
+        UrlValidator $urlValidator,
+        CommentaireService $commentaireService,
+        AnnuaireService $annuaire,
+        array $user = []
+    )
     {
         $this->em = $em;
         $this->obsRepository = $obsRepository;
@@ -44,6 +60,7 @@ class DelObservationController extends AbstractController
         $this->mapping = $mapping;
         $this->externalRequests = $externalRequests;
         $this->urlValidator = $urlValidator;
+        $this->commentaireService = $commentaireService;
         $this->annuaire = $annuaire;
         $this->user = $this->annuaire->getUtilisateurAnonyme();
     }
@@ -94,7 +111,7 @@ class DelObservationController extends AbstractController
     }
 
     #[Route('/observations/{id_observation}', name: 'observation_single', methods: ['GET'])]
-    public function GetOneObs(int $id_observation): Response
+    public function getOneObs(int $id_observation): Response
     {
         $obs = $this->obsRepository->findOneBy(['id_observation' => $id_observation]);
         if (!$obs) {
@@ -112,7 +129,7 @@ class DelObservationController extends AbstractController
 
     // toutes les infos sur les votes d'une observation
     #[Route('/observations/{id_observation}/vote', name: 'observation_vote', methods: ['GET'])]
-    public function GetObsVotes(int $id_observation): Response
+    public function getObsVotes(int $id_observation): Response
     {
         $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $id_observation]);
         $votes = [];
@@ -129,7 +146,7 @@ class DelObservationController extends AbstractController
 
     // toutes les infos sur les votes d'une proposition
     #[Route('/observations/{id_observation}/{id_commentaire}/vote', name: 'proposition_vote', methods: ['GET'])]
-    public function GetPropositionVotes(int $id_observation, int $id_commentaire): Response
+    public function getPropositionVotes(int $id_observation, int $id_commentaire): Response
     {
         $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
 
@@ -139,5 +156,68 @@ class DelObservationController extends AbstractController
     protected function completerInfosUtilisateur() {
         $this->user['session_id'] = session_id();
         $this->user['connecte'] = true;
+    }
+
+    #[Route('/observations/{id_observation}/{id_proposition}/vote', name: 'voter', methods: ['PUT'])]
+    public function voterPourProposition(int $id_observation, int $id_proposition, Request $request): Response
+    {
+        $userId = "";
+        $content = json_decode($request->getContent(), true);
+
+        if (!isset($content['valeur']) || (trim($content['valeur']) != '0' && trim($content['valeur']) != '1') ) {
+            return new JsonResponse(['message' => 'Erreur de configuration, le paramètre valeur est obligatoire et doit avoir une valeur de "0" ou "1".'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $observation = $this->obsRepository->findOneBy(['id_observation' => $id_observation]);
+        if (!$observation) {
+            return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        // On vérifie l'id de la proposition et crée un nouveau si nécessaire
+        if ($id_proposition == 0) {
+            $isFirstComment = $this->commentaireService->verifierCommentairesExistantSurObs($observation);
+            if ($isFirstComment) {
+                // Si pas de commentaire existant, on en crée un avec les données de l'obs pour pouvoir récupérer un id_proposition
+                $firstComment = $this->commentaireService->creerPremierCommentaire($observation);
+                $id_proposition = $firstComment;
+            } else {
+                return new JsonResponse(['message' => 'L\'observation '.$id_observation.' est déjà commentée, veuillez indiquer un id_proposition'], Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            $commentaire = $this->commentaireRepository->findOneBy(['id_commentaire' => (int)$id_proposition]);
+            if (!$commentaire) {
+                return new JsonResponse(['message' => 'Proposition: '.$id_proposition .' introuvable, impossible de voter'], Response::HTTP_NOT_FOUND);
+            }
+            $id_proposition = $commentaire;
+        }
+
+        // On vérifie les données utilisateur (anonyme ou authentifié)
+        if (!isset($content['utilisateur']) || $content['utilisateur'] == '' || $content['utilisateur'] == 0) {
+           $user = $this->annuaire->getUtilisateurAnonyme();
+           $userId = $user['id_utilisateur'];
+        } else {
+            $auth = $this->annuaire->getUtilisateurAuthentifie($request);
+            $response = $auth->getContent();
+
+            if ($auth->getStatusCode() != 200) {
+                $error = json_decode($response, true);
+                return new JsonResponse(['message' => 'Utilisateur introuvable, veuillez vous reconnecter', 'error' => $error['error']], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $response]);
+            $userId = $user->getIdUtilisateur();
+        }
+
+        $vote = new DelCommentaireVote();
+        $vote->setValeur($content['valeur']);
+        $vote->setCeProposition($id_proposition);
+        $vote->setCeUtilisateur($userId);
+        $vote->setDate(new \DateTime('now'));
+
+        $this->em->persist($vote);
+        $this->em->flush();
+
+        $json = json_encode(["id_commentaire" => $vote->getIdVote()], true);
+        return new JsonResponse($json, Response::HTTP_CREATED, [], true);
     }
 }

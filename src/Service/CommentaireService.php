@@ -85,7 +85,8 @@ class CommentaireService
         return $erreurs;
     }
 
-    public function creerPremierCommentaire(DelObservation $observation) {
+    public function creerPremierCommentaire(DelObservation $observation): DelCommentaire
+    {
         $obsAuteur = $this->delUserRepository->findOneBy(['id_utilisateur' => $observation->getCeUtilisateur()]);
 
         $firstComment = new DelCommentaire();
@@ -112,6 +113,8 @@ class CommentaireService
 
         $this->em->persist($firstComment);
         $this->em->flush();
+
+        return $firstComment;
     }
 
     public function verifierCommentairesExistantSurObs(DelObservation $observation): bool {
