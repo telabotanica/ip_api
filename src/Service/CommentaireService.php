@@ -4,18 +4,30 @@ namespace App\Service;
 
 use App\Entity\DelCommentaire;
 use App\Entity\DelObservation;
+use App\Repository\DelCommentaireRepository;
+use App\Repository\DelCommentaireVoteRepository;
 use App\Repository\DelUtilisateurInfosRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CommentaireService
 {
     private EntityManagerInterface $em;
+    private DelCommentaireVoteRepository $voteRepository;
+    private DelCommentaireRepository $commentaireRepository;
     private DelUtilisateurInfosRepository $delUserRepository;
+    private SerializerInterface $serializer;
+    private AnnuaireService $annuaire;
 
-    public function __construct(EntityManagerInterface $em, DelUtilisateurInfosRepository $delUserRepository)
+    public function __construct(EntityManagerInterface $em, DelCommentaireVoteRepository $voteRepository, DelCommentaireRepository $commentaireRepository,DelUtilisateurInfosRepository $delUserRepository, SerializerInterface $serializer, AnnuaireService $annuaire)
     {
         $this->em = $em;
+        $this->voteRepository = $voteRepository;
+        $this->commentaireRepository = $commentaireRepository;
         $this->delUserRepository = $delUserRepository;
+        $this->serializer = $serializer;
+        $this->annuaire = $annuaire;
     }
 
     /**
@@ -73,24 +85,24 @@ class CommentaireService
         return $erreurs;
     }
 
-    public function creerPremierCommentaire(DelObservation $observation, array $obs_array) {
-        $obsAuteur = $this->delUserRepository->findOneBy(['id_utilisateur' => $obs_array['auteur.id']]);
+    public function creerPremierCommentaire(DelObservation $observation) {
+        $obsAuteur = $this->delUserRepository->findOneBy(['id_utilisateur' => $observation->getCeUtilisateur()]);
 
         $firstComment = new DelCommentaire();
         $firstComment->setCeObservation($observation);
         $firstComment->setCeProposition(0);
         $firstComment->setCeUtilisateur($obsAuteur);
-        $firstComment->setUtilisateurNom($obs_array['auteur.nom']);
-        $firstComment->setUtilisateurPrenom($obs_array['auteur.prenom']);
-        $firstComment->setUtilisateurCourriel($obs_array['auteur.courriel']);
-        $firstComment->setTexte($obs_array['commentaire']);
-        $firstComment->setNomSel($obs_array['determination.ns']);
-        $firstComment->setNomSelNn($obs_array['determination.nn']);
-        $firstComment->setNomRet($obs_array['determination.nom_ret']);
-        $firstComment->setNomRetNn($obs_array['determination.nom_ret_nn']);
-        $firstComment->setNomReferentiel($obs_array['determination.referentiel']);
-        $firstComment->setFamille($obs_array['determination.famille']);
-        $firstComment->setNt($obs_array['determination.nt']);
+        $firstComment->setUtilisateurNom($observation->getNomUtilisateur());
+        $firstComment->setUtilisateurPrenom($observation->getPrenomUtilisateur());
+        $firstComment->setUtilisateurCourriel($observation->getCourrielUtilisateur());
+        $firstComment->setTexte($observation->getCommentaire());
+        $firstComment->setNomSel($observation->getNomSel());
+        $firstComment->setNomSelNn($observation->getNomSelNn());
+        $firstComment->setNomRet($observation->getNomRet());
+        $firstComment->setNomRetNn($observation->getNomRetNn());
+        $firstComment->setNomReferentiel($observation->getNomReferentiel());
+        $firstComment->setFamille($observation->getFamille());
+        $firstComment->setNt($observation->getNt());
         $firstComment->setCeCommentaireParent(0);
         $firstComment->setPropositionInitiale(true);
         $firstComment->setPropositionRetenue(false);
@@ -102,4 +114,52 @@ class CommentaireService
         $this->em->flush();
     }
 
+    public function verifierCommentairesExistantSurObs(DelObservation $observation): bool {
+        $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $observation->getIdObservation()]);
+        if (count($commentaires) > 0) {
+            return false;
+        }
+
+        $votes = $this->voteRepository->findBy(['ce_proposition' => $observation->getIdObservation()]);
+        if (count($votes) > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public function creerNouveauCommentaire(DelObservation $observation, array $data, Request $request): DelCommentaire
+    {
+        $commentaire = new DelCommentaire();
+        $commentaire = $this->serializer->deserialize(json_encode($data), DelCommentaire::class, 'json');
+        $commentaire->setCeObservation($observation);
+        $commentaire->setPropositionInitiale(false);
+        $commentaire->setPropositionRetenue(false);
+        $commentaire->setDate(new \DateTime('now'));
+        $commentaire->setCeValidateur(0);
+        $commentaire->setDateValidation(null);
+
+        // Ajout utilisateur anonyme
+        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => 0]);
+        $commentaire->setCeUtilisateur($user);
+
+        // Modif des infos user si utilisateur connecté
+        $auth = $this->annuaire->getUtilisateurAuthentifie($request);
+        if ($auth->getStatusCode() == 200) {
+            $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
+            $commentaire->setUtilisateurNom($user->getNom());
+            $commentaire->setUtilisateurPrenom($user->getPrenom());
+            $commentaire->setUtilisateurCourriel($user->getCourriel());
+            $commentaire->setCeUtilisateur($user);
+//            $this->completerInfosUtilisateur();
+        }
+
+        return $commentaire;
+    }
+
+    /*
+    protected function completerInfosUtilisateur() {
+        $this->user['session_id'] = session_id();
+        $this->user['connecte'] = true;
+    }
+    */
 }

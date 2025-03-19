@@ -18,7 +18,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DelCommentaireController extends AbstractController
@@ -32,9 +31,20 @@ class DelCommentaireController extends AbstractController
     private Mapping $mapping;
     private AnnuaireService $annuaire;
     private CommentaireService $commentaireService;
-    private array $user = [];
+//    private array $user = [];
 
-    public function __construct(EntityManagerInterface $em, DelCommentaireRepository $commentaireRepository, DelObservationRepository $observationRepository, DelCommentaireVoteRepository $voteRepository, DelUtilisateurInfosRepository $delUserRepository,SerializerInterface $serializer, Mapping $mapping,  AnnuaireService $annuaire, CommentaireService $commentaireService, array $user = [])
+    public function __construct(
+        EntityManagerInterface $em,
+        DelCommentaireRepository $commentaireRepository,
+        DelObservationRepository $observationRepository,
+        DelCommentaireVoteRepository $voteRepository,
+        DelUtilisateurInfosRepository $delUserRepository,
+        SerializerInterface $serializer,
+        Mapping $mapping,
+        AnnuaireService $annuaire,
+        CommentaireService $commentaireService,
+//                                array $user = []
+    )
     {
         $this->em = $em;
         $this->commentaireRepository = $commentaireRepository;
@@ -45,7 +55,7 @@ class DelCommentaireController extends AbstractController
         $this->mapping = $mapping;
         $this->annuaire = $annuaire;
         $this->commentaireService = $commentaireService;
-        $this->user = $this->annuaire->getUtilisateurAnonyme();
+//        $this->user = $this->annuaire->getUtilisateurAnonyme();
     }
 
     #[Route('/commentaires', name: 'commentaire_all', methods: ['GET'])]
@@ -127,42 +137,14 @@ class DelCommentaireController extends AbstractController
             return new JsonResponse(['message' => 'Observation: '.$data['ce_observation'] .' introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        $commentaire = new DelCommentaire();
-        $commentaire = $this->serializer->deserialize(json_encode($data), DelCommentaire::class, 'json');
-        $commentaire->setCeObservation($observation);
-        $commentaire->setPropositionInitiale(false);
-        $commentaire->setPropositionRetenue(false);
-        $commentaire->setDate(new \DateTime('now'));
-        $commentaire->setCeValidateur(0);
-        $commentaire->setDateValidation(null);
+        $commentaire = $this->commentaireService->creerNouveauCommentaire($observation, $data, $request);
 
-        // Ajout utilisateur anonyme
-        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => 0]);
-        $commentaire->setCeUtilisateur($user);
-
-        // Modif des infos user si utilisateur connecté
-        $auth = $this->annuaire->getUtilisateurAuthentifie($request);
-        if ($auth->getStatusCode() == 200) {
-            $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
-            $commentaire->setUtilisateurNom($user->getNom());
-            $commentaire->setUtilisateurPrenom($user->getPrenom());
-            $commentaire->setUtilisateurCourriel($user->getCourriel());
-            $commentaire->setCeUtilisateur($user);
-//            $this->completerInfosUtilisateur();
+        // Si pas de com existant, on en crée un à partir de l'obs
+        $isFirstComment = $this->commentaireService->verifierCommentairesExistantSurObs($observation);
+        if ($isFirstComment) {
+            $this->commentaireService->creerPremierCommentaire($observation);
         }
 
-        // Transformation de l'observation en array
-        $json = $this->serializer->serialize($observation, 'json', ['groups' => 'observations']);
-        $obs_array = json_decode($json, true);
-        $obs_array['nb_commentaires'] = 0;
-        $obs_array = $this->mapping->mapObservation($obs_array);
-
-        //Si c'est le 1er commentaire/vote sur l'obs on crée un 1er commentaire avec les données de l'obs
-        if ($obs_array['nb_commentaires'] == 0) {
-            $this->commentaireService->creerPremierCommentaire($observation, $obs_array);
-        }
-
-//        dd($obs_array, $commentaire);
         $this->em->persist($commentaire);
         $this->em->flush();
 
@@ -191,7 +173,7 @@ class DelCommentaireController extends AbstractController
         }
 
         $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
-        if ( $user->getIdUtilisateur() != $commentaire->getAuteurId() && $user->getAdmin() < 2){
+        if ( !$this->annuaire->isAuthorOrAdmin($user, $commentaire->getAuteurId()) ){
             return new JsonResponse(['message' => 'Vous n\'êtes pas autorisé à supprimer ce commentaire '], Response::HTTP_UNAUTHORIZED);
         }
 
@@ -206,11 +188,6 @@ class DelCommentaireController extends AbstractController
         $json = json_encode(["ok" => 'Commentaire '. $id_commentaire .' supprimé'], true);
 
         return new JsonResponse($json, Response::HTTP_ACCEPTED);
-    }
-
-    protected function completerInfosUtilisateur() {
-        $this->user['session_id'] = session_id();
-        $this->user['connecte'] = true;
     }
 
 }

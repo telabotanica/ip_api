@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\DelUtilisateurInfos;
 use App\Model\User;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelUtilisateurInfosRepository;
@@ -229,6 +230,24 @@ class AnnuaireService
             };
 //            $this->em->flush();
         }
+        return true;
+    }
+
+    public function isAuthorOrAdmin(DelUtilisateurInfos $user, string|int $auteur_id): bool
+    {
+        if ( $user->getIdUtilisateur() != $auteur_id && $user->getAdmin() < 2){
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isAuthorOrVerificateur(DelUtilisateurInfos $user, string|int $auteur_id): bool
+    {
+        if ( $user->getIdUtilisateur() != $auteur_id && $user->getAdmin() < 1){
+            return false;
+        }
+
         return true;
     }
 }
