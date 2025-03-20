@@ -10,6 +10,7 @@ use App\Repository\DelObservationRepository;
 use App\Repository\DelUtilisateurInfosRepository;
 use App\Service\AnnuaireService;
 use App\Service\CommentaireService;
+use App\Service\ExternalRequests;
 use App\Service\Mapping;
 use App\Service\UrlValidator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,6 +30,7 @@ class DelCommentaireController extends AbstractController
     private DelUtilisateurInfosRepository $delUserRepository;
     private SerializerInterface $serializer;
     private Mapping $mapping;
+    private ExternalRequests $externalRequests;
     private AnnuaireService $annuaire;
     private CommentaireService $commentaireService;
 //    private array $user = [];
@@ -41,6 +43,7 @@ class DelCommentaireController extends AbstractController
         DelUtilisateurInfosRepository $delUserRepository,
         SerializerInterface $serializer,
         Mapping $mapping,
+        ExternalRequests $externalRequests,
         AnnuaireService $annuaire,
         CommentaireService $commentaireService,
 //                                array $user = []
@@ -53,6 +56,7 @@ class DelCommentaireController extends AbstractController
         $this->delUserRepository = $delUserRepository;
         $this->serializer = $serializer;
         $this->mapping = $mapping;
+        $this->externalRequests = $externalRequests;
         $this->annuaire = $annuaire;
         $this->commentaireService = $commentaireService;
 //        $this->user = $this->annuaire->getUtilisateurAnonyme();
@@ -188,6 +192,65 @@ class DelCommentaireController extends AbstractController
         $json = json_encode(["ok" => 'Commentaire '. $id_commentaire .' supprimé'], true);
 
         return new JsonResponse($json, Response::HTTP_ACCEPTED);
+    }
+
+    #[Route('/determinations/valider-determination/{id_proposition}', name: 'valider', methods: ['POST'])]
+    public function validerProposition(int $id_proposition, Request $request): Response
+    {
+        $erreurs = [];
+        $token = $request->headers->get('Authorization');
+
+        $commentaire = $this->commentaireRepository->findOneBy(['id_commentaire' => (int)$id_proposition]);
+        if (!$commentaire) {
+            return new JsonResponse(['message' => 'Proposition: '.$id_proposition .' introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $erreurs = $this->commentaireService->verifierPropositionValidable($commentaire, $erreurs);
+        if (!empty($erreurs)) {
+            $msg = "Erreur de configuration : ".implode(" --- ", $erreurs);
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+        }
+
+        $auth = $this->annuaire->getUtilisateurAuthentifie($request);
+        if ($auth->getStatusCode() != 200) {
+            return new JsonResponse(['message' => 'Vous devez vous connecter pour valider cette proposition.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
+        if ( !$this->annuaire->isAuthorOrVerificateur($user, $commentaire->getAuteurId()) ){
+            return new JsonResponse(['message' => 'Vous n\'êtes pas autorisé à valider cette proposition.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $parametres = [
+            'certainty' => 'certain',
+            'userSciNameId' => (int)$commentaire->getNomSelNn(),
+            'userSciName' => $commentaire->getNomSel(),
+            'taxoRepo' => $commentaire->getNomReferentiel(),
+//            'family' => $commentaire->getFamille(),
+//            'isIdentiplanteValidated' => 1,
+//            'date_updated' => new \DateTime('now')
+        ];
+
+        $celUpdate = $this->externalRequests->modifierObservation($commentaire->getObservation(), $parametres, $token);
+        if ($celUpdate->getStatusCode() !== 200) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de la modification de l\'observation',
+                'error' => $celUpdate->getContent()
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $commentaire->getObservation()]);
+        $this->commentaireService->devaliderAutresPropositions($commentaires, $id_proposition);
+
+        $commentaire->setPropositionRetenue(1);
+        $commentaire->setCeValidateur($user->getIdUtilisateur());
+        $commentaire->setDateValidation(new \DateTime('now'));
+        $this->em->persist($commentaire);
+        $this->em->flush();
+
+        //TODO: envoie mail à auteur selon les préférences.
+
+        return new JsonResponse(json_encode("Proposition validée"), Response::HTTP_CREATED);
     }
 
 }

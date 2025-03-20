@@ -254,52 +254,6 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['observations_vote']],
             name: 'voter'
         ),
-        new Post(
-            uriTemplate: '/determinations/valider-determination/{id_proposition}',
-            openapiContext: [
-                'summary' => 'Validate a proposition',
-                'description' => 'Validate a proposition',
-                'parameters' => [
-                    [
-                        'name' => 'navigation.depart',
-                        'in' => 'query',
-                        'description' => 'Starting index ',
-                        'required' => true,
-                        'schema' => ['type' => 'integer'],
-                        'default' => 0,
-                    ],
-                ],
-                'requestBody' => [
-                    'content' => [
-                        'application/json' => [
-                            'schema' => [
-                                'type' => 'object',
-                                'properties' => [
-                                    'auteur.id' => ['type' => 'integer'],
-                                    'validateur.id' => ['type' => 'integer'],
-                                ],
-                                'required' => ['auteur.id', 'validateur.id'],
-                            ],
-                        ],
-                    ],
-                ],
-                'responses' => [
-                    '201' => [
-                        'description' => 'ok',
-                        'content' => [
-                            'application/json' => [
-                                'schema' => [
-                                    'type' => 'string',
-                                    'example' => 'ok'
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            denormalizationContext: ['groups' => ['observations_valider']],
-            name: 'valider'
-        )
     ],
     formats: ["json"],
     controller: DelObservationController::class
