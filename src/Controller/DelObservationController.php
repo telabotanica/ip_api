@@ -224,4 +224,42 @@ class DelObservationController extends AbstractController
         return new JsonResponse($json, Response::HTTP_CREATED, [], true);
     }
 
+    #[Route('/observations/{id_observation}', name: 'depublier_obs', methods: ['POST'])]
+    public function depublierObs(int $id_observation, Request $request): Response
+    {
+        $token = $request->headers->get('Authorization');
+        $content = json_decode($request->getContent(), true);
+
+        $obs = $this->obsRepository->findOneBy(['id_observation' => $id_observation]);
+        if (!$obs) {
+            return new JsonResponse(['message' => 'Observation: '.$id_observation .' introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!isset($content['transmission']) || $content['transmission'] != "0" ){
+            return new JsonResponse(['message' => 'Le paramètre transmission est obligatoire (0).'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $auth = $this->annuaire->getUtilisateurAuthentifie($request);
+        if ($auth->getStatusCode() != 200) {
+            return new JsonResponse(['message' => 'Vous devez vous connecter pour supprimer ce commentaire '], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
+        if ( !$this->annuaire->isAuthorOrAdmin($user, $obs->getCeUtilisateur()) ){
+            return new JsonResponse(['message' => 'Vous n\'êtes pas autorisé à supprimer ce commentaire '], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $parametres = [
+            "isPublic" => (bool)$content["transmission"]
+        ];
+        $celUpdate = $this->externalRequests->modifierObservation($id_observation, $parametres, $token, 'PATCH');
+        if ($celUpdate->getStatusCode() !== 200) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de la modification de l\'observation',
+                'error' => json_decode($celUpdate->getContent(), true)
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new Response("OK", Response::HTTP_CREATED);
+    }
 }

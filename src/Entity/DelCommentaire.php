@@ -79,16 +79,6 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             openapiContext: [
                 'summary' => 'Validate a proposition',
                 'description' => 'Validate a proposition',
-                'parameters' => [
-                    [
-                        'name' => 'navigation.depart',
-                        'in' => 'query',
-                        'description' => 'Starting index ',
-                        'required' => true,
-                        'schema' => ['type' => 'integer'],
-                        'default' => 0,
-                    ],
-                ],
                 'requestBody' => [
                     'content' => [
                         'application/json' => [
@@ -117,7 +107,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
                     ],
                 ],
             ],
-            denormalizationContext: ['groups' => ['observations_valider']],
+            denormalizationContext: ['groups' => ['proposition_valider']],
             name: 'valider'
         )
     ],

@@ -58,12 +58,12 @@ class ExternalRequests
         return strcmp($a['nom_fr'], $b['nom_fr']);
     }
 
-    public function modifierObservation($obs_id, $parametres, $token): Response
+    public function modifierObservation($obs_id, $parametres, $token, $type): Response
     {
         $url = $this->urlServiceCelObs.$obs_id;
         $json = json_encode($parametres);
 
-        $response = $this->client->request('PATCH', $url, [
+        $response = $this->client->request($type, $url, [
             'headers' => [
                 'Authorization' => $token,
                 'Content-Type' => 'application/json'

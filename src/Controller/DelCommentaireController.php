@@ -231,7 +231,7 @@ class DelCommentaireController extends AbstractController
 //            'date_updated' => new \DateTime('now')
         ];
 
-        $celUpdate = $this->externalRequests->modifierObservation($commentaire->getObservation(), $parametres, $token);
+        $celUpdate = $this->externalRequests->modifierObservation($commentaire->getObservation(), $parametres, $token, 'PATCH');
         if ($celUpdate->getStatusCode() !== 200) {
             return new JsonResponse([
                 'message' => 'Erreur lors de la modification de l\'observation',
@@ -250,7 +250,7 @@ class DelCommentaireController extends AbstractController
 
         //TODO: envoie mail à auteur selon les préférences.
 
-        return new JsonResponse(json_encode("Proposition validée"), Response::HTTP_CREATED);
+        return new Response("Proposition validée", Response::HTTP_CREATED);
     }
 
 }

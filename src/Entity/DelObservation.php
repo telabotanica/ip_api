@@ -254,6 +254,41 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['observations_vote']],
             name: 'voter'
         ),
+        new Post(
+            uriTemplate: '/observations/{id_observation}',
+            openapiContext: [
+                'summary' => 'Unpublish an observation',
+                'description' => 'Unpublish an observation',
+                'requestBody' => [
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'transmission' => ['type' => 'integer', 'enum' => ['0', '1']],
+                                ],
+                                'required' => ['transmission'],
+                            ],
+                        ],
+                    ],
+                ],
+                'responses' => [
+                    '201' => [
+                        'description' => 'OK',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'string',
+                                    'example' => 'ok'
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            denormalizationContext: ['groups' => ['observations_depublier']],
+            name: 'depublier_obs'
+        )
     ],
     formats: ["json"],
     controller: DelObservationController::class
