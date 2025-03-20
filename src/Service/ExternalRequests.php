@@ -2,16 +2,20 @@
 
 namespace App\Service;
 
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ExternalRequests
 {
     private string $urlServiceBaseEflore;
+    private string $urlServiceCelObs;
 
     public function __construct(
-        private HttpClientInterface $client, string $urlServiceBaseEflore
+        private HttpClientInterface $client, string $urlServiceBaseEflore, string $urlServiceCelObs
     ) {
         $this->urlServiceBaseEflore = $urlServiceBaseEflore;
+        $this->urlServiceCelObs = $urlServiceCelObs;
     }
 
     public function getPays(): array
@@ -52,5 +56,28 @@ class ExternalRequests
 
     protected function trierPays($a, $b) {
         return strcmp($a['nom_fr'], $b['nom_fr']);
+    }
+
+    public function modifierObservation($obs_id, $parametres, $token): Response
+    {
+        $url = $this->urlServiceCelObs.$obs_id;
+        $json = json_encode($parametres);
+
+        $response = $this->client->request('PATCH', $url, [
+            'headers' => [
+                'Authorization' => $token,
+                'Content-Type' => 'application/json'
+            ],
+            'body' => $json
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            return new JsonResponse([
+                'message' => 'Erreur lors de la modification de l\'observation',
+                'error' => $response->getContent()
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse($response->getContent(), Response::HTTP_OK);
     }
 }

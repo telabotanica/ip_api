@@ -159,6 +159,52 @@ class CommentaireService
         return $commentaire;
     }
 
+    public function verifierPropositionValidable(DelCommentaire $commentaire, array $erreurs)
+    {
+        if (!$commentaire->getNomSelNn()) {
+            $erreurs[] = 'Le numéro taxonomique n\'est pas renseigné';
+        }
+
+        if (!$commentaire->getNomSel()) {
+            $erreurs[] = 'Le nom scientifique n\'est pas renseigné';
+        }
+
+        if (!$commentaire->getNomReferentiel()) {
+            $erreurs[] = 'Le nom du référentiel n\'est pas renseigné';
+        }
+
+        if ($commentaire->getCeCommentaireParent()){
+            $erreurs[] = 'Une proposition ne peut pas être une réponse à un commentaire';
+        }
+
+        if ($commentaire->getCeProposition()){
+            $erreurs[] = 'Une proposition ne peut pas être une réponse à une autre proposition';
+        }
+
+        return $erreurs;
+    }
+
+    /**
+     * @param DelCommentaire[] $commentaires
+     */
+    public function devaliderAutresPropositions(array $commentaires, int $id_proposition)
+    {
+        $modifications = false;
+
+        foreach ($commentaires as $commentairePresents) {
+            if ($commentairePresents->getIdCommentaire() != $id_proposition && $commentairePresents->isPropositionRetenue() == 1) {
+                $commentairePresents->setPropositionRetenue(0);
+//               $commentairePresents->setCeValidateur(0);
+//               $commentairePresents->setDateValidation(null);
+                $this->em->persist($commentairePresents);
+                $modifications = true;
+            }
+        }
+
+        if ($modifications) {
+            $this->em->flush();
+        }
+    }
     /*
     protected function completerInfosUtilisateur() {
         $this->user['session_id'] = session_id();

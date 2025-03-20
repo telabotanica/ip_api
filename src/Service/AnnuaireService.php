@@ -200,9 +200,6 @@ class AnnuaireService
         // On transforme l'id en string sinon la deserialization ne marche pas
         $user->setIdUtilisateur((string)$user->getIdUtilisateur());
 
-//        $json = $this->serializer->serialize($user, 'json', ['groups' => 'user']);
-
-//        return new Response($json, Response::HTTP_OK);
         return new Response($user->getIdUtilisateur(), Response::HTTP_OK);
     }
 
