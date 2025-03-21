@@ -31,6 +31,7 @@ services:
         arguments:
             $urlServiceBaseEflore: '%env(URL_SERVICE_BASE_EFLORE)%'
             $urlServiceCelObs: '%env(URL_SERVICE_CEL_OBS)%'
+            $urlAutocompletionTpl: '%env(URL_AUTOCOMPLETION_TPL)%'
     App\Service\Mapping:
         arguments:
             $cel_img_url_tpl: '%env(CEL_IMG_URL_TPL)%'

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\DelCommentaire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -10,12 +11,14 @@ class ExternalRequests
 {
     private string $urlServiceBaseEflore;
     private string $urlServiceCelObs;
+    private string $urlAutocompletionTpl;
 
     public function __construct(
-        private HttpClientInterface $client, string $urlServiceBaseEflore, string $urlServiceCelObs
+        private HttpClientInterface $client, string $urlServiceBaseEflore, string $urlServiceCelObs, string $urlAutocompletionTpl
     ) {
         $this->urlServiceBaseEflore = $urlServiceBaseEflore;
         $this->urlServiceCelObs = $urlServiceCelObs;
+        $this->urlAutocompletionTpl = $urlAutocompletionTpl;
     }
 
     public function getPays(): array
@@ -79,5 +82,41 @@ class ExternalRequests
         }
 
         return new JsonResponse($response->getContent(), Response::HTTP_OK);
+    }
+
+    public function tenterEnrichissementTaxonomique(DelCommentaire $commentaire, $obsReferentiel): DelCommentaire
+    {
+        if($this->commentaireEstPropositionSansNn($commentaire)) {
+            // Si le référentiel n'est pas fourni dans le commentaire on prend celui de l'observation
+            $referentiel = $commentaire->getNomReferentiel() ? $commentaire->getNomReferentiel() : $obsReferentiel;
+            $requete = urlencode($commentaire->getNomSel());
+            $url = sprintf($this->urlAutocompletionTpl, $referentiel, $requete);
+
+            $response = $this->client->request('GET', $url, [
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ]
+            ]);
+            // Un retour vide est possible (un cas normal où il n'y a pas de résultat)
+            // mais il fait planter le retour du service si on active l'affichage des erreurs
+            // donc on passe sciemment les erreurs sous silence (car cette erreur n'en est pas une)
+
+            if ($response->getStatusCode() == 200) {
+                $resultats = json_decode($response->getContent(), true);
+                // On ne fait l'affectation que si l'on est sur (donc si un seul résultat)
+                if (isset($resultats['resultat']) && count($resultats['resultat']) == 1) {
+                    $info = array_pop($resultats['resultat']);
+                    $commentaire->setNomSelNn($info['num_nom']);
+                }
+            }
+        }
+
+        return $commentaire;
+    }
+
+    private function commentaireEstPropositionSansNn(DelCommentaire $commentaire) {
+        // Pas besoin de tester si c'est vide, normalement verifierParametres l'a déjà fait
+        return $commentaire->getNomSel()
+            && !$commentaire->getNomSelNn();
     }
 }

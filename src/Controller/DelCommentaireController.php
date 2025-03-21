@@ -123,7 +123,7 @@ class DelCommentaireController extends AbstractController
     }
 
     #[Route('/commentaires/', name: 'put_commentaire', methods: ['PUT'])]
-    public function PostCommentaireVote(Request $request): Response
+    public function PostCommentaire(Request $request): Response
     {
         $erreurs= [];
         $content = json_decode($request->getContent(), true);
@@ -142,6 +142,7 @@ class DelCommentaireController extends AbstractController
         }
 
         $commentaire = $this->commentaireService->creerNouveauCommentaire($observation, $data, $request);
+        $commentaire = $this->externalRequests->tenterEnrichissementTaxonomique($commentaire, $observation->getNomReferentiel());
 
         // Si pas de com existant, on en crée un à partir de l'obs
         $isFirstComment = $this->commentaireService->verifierCommentairesExistantSurObs($observation);
