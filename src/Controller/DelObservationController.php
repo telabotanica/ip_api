@@ -139,21 +139,33 @@ class DelObservationController extends AbstractController
 
         foreach ($commentaires as $commentaire) {
             $votesBycomment = $this->voteRepository->findBy(['ce_proposition' => $commentaire->getIdCommentaire()]);
+
             if ($votesBycomment) {
-                $votes += $votesBycomment;
+                foreach ($votesBycomment as $value) {
+                    $vote = $this->mapping->mapVotes($value);
+                    $votes[] = $vote;
+                }
             }
+
         }
 
         return $this->json($votes, 200, [], ['groups' => ['votes']]);
     }
 
     // toutes les infos sur les votes d'une proposition
-    #[Route('/observations/{id_observation}/{id_commentaire}/vote', name: 'proposition_vote', methods: ['GET'])]
+    #[Route('/observations/{id_observation}/{id_commentaire}/vote/', name: 'proposition_vote', methods: ['GET'])]
     public function getPropositionVotes(int $id_observation, int $id_commentaire): Response
     {
+        $mappedVotes = [];
         $votes = $this->voteRepository->findBy(['ce_proposition' => $id_commentaire]);
+        if ($votes) {
+            foreach ($votes as $value) {
+                $vote = $this->mapping->mapVotes($value);
+                $mappedVotes[] = $vote;
+            }
+        }
 
-        return $this->json($votes, 200, [], ['groups' => ['votes']]);
+        return $this->json($mappedVotes, 200, [], ['groups' => ['votes']]);
     }
 
     protected function completerInfosUtilisateur() {

@@ -14,6 +14,7 @@ Pictoflora routes will be implemented later.
 
 ```bash
 composer install
+/usr/bin/php8.1 /usr/local/bin/composer install
 ```
 
 ## Configuration
