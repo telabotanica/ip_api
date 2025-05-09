@@ -35,20 +35,23 @@ class CommentaireService
      * par un triplet (nom, prénom, adresse courriel)
      */
     public function verifierParametres($parametres, $erreurs) {
-        if (!isset($parametres['observation'])) {
-            $erreurs[] = "Impossible d'ajouter un commentaire sans identifiant d'observation (paramètre 'observation').";
+        if (!isset($parametres['auteur_id'])) {
+            $erreurs = $this->verifierParamsAuteurAnonyme($parametres, $erreurs);
         }
 
-        if (!isset($parametres['auteur_id'])) {
-            $erreurs[] = $this->verifierParamsAuteurAnonyme($parametres, $erreurs);
+        if (!isset($parametres['observation'])) {
+            $erreurs[] = "Impossible d'ajouter un commentaire sans identifiant d'observation (paramètre 'observation').";
         }
 
         if (!isset($parametres['nom_sel_nn']) && (!isset($parametres['texte']) || trim($parametres['texte']) == '')) {
             $erreurs[] = "Le paramètre «texte» est obligatoire et ne doit pas être vide pour ajouter un commentaire.";
         }
 
-        $erreurs = $this->verifierParamsTaxonNonVide($parametres, $erreurs);
-
+        if ($this->verifierParamsTaxonNonVide($parametres)) {
+            $erreurs[] = "S'il sont présent, les paramètres «nom_sel», «nom_referentiel», et «nom_sel_nn» ne peuvent pas être vides.";
+        }
+//        $erreurs = $this->verifierParamsTaxonNonVide($parametres, $erreurs);
+//
         if (isset($parametres['nom_sel_nn']) && (!isset($parametres['nom_referentiel']) || !isset($parametres['nom_sel']) )) {
             $erreurs[] = "Si le paramètre «nom_sel_nn» est présent, les paramètre «nom_referentiel» et «nom_sel» doivent l'être aussi.";
         }
@@ -56,14 +59,14 @@ class CommentaireService
         return $erreurs;
     }
 
-    private function verifierParamsTaxonNonVide($parametres, $erreurs) {
+    private function verifierParamsTaxonNonVide($parametres) {
         $paramsNonVide = array('nom_sel', 'nom_referentiel', 'nom_sel_nn');
         foreach ($paramsNonVide as $param) {
             if (isset($parametres[$param]) && trim($parametres[$param]) == '' ) {
-                $erreurs[] = "S'il est présent le paramètre «".$param."» ne peut pas être vide.";
+                return true;
             }
         }
-        return $erreurs;
+        return false;
     }
 
     private function verifierParamsAuteurAnonyme($parametres, $erreurs) {

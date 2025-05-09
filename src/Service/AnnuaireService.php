@@ -12,6 +12,7 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class AnnuaireService
 {
@@ -41,18 +42,23 @@ class AnnuaireService
     public function verifierJeton(string $token)
     {
         $client = new HttpBrowser();
-        $client->request('GET', $this->ssoAnnuaireUrl.'verifierjeton?token=' . $token, [
-            'headers' => [
-                'Authorization' => $token,
-            ],
-        ]);
-        $response = $client->getResponse();
+        try {
+            $client->request('GET', $this->ssoAnnuaireUrl . 'verifierjeton?token=' . $token, [
+                'headers' => [
+                    'Authorization' => $token,
+                ],
+            ]);
 
-        if (200 !== $response->getStatusCode()) {
+            $response = $client->getResponse();
+
+            if (200 !== $response->getStatusCode()) {
+                return false;
+            }
+
+            return json_decode($response->getContent(), true);
+        } catch (TransportExceptionInterface $e) {
             return false;
         }
-
-        return json_decode($response->getContent(), true);
     }
     public function refreshToken(string $token, ?array $cookie = null): array
     {
