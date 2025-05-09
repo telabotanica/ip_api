@@ -201,7 +201,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             name: 'observation_all',),
         new Get(uriTemplate: '/observations/{id_observation}', denormalizationContext: ['groups' => ['observations']], name: 'observation_single'),
         new Get(
-            uriTemplate: '/observations/{id_observation}/vote',
+            uriTemplate: '/observations/vote/{id_observation}',
             openapiContext: [
                 'summary' => 'Get observation votes',
                 'description' => 'Get observation votes',
@@ -209,7 +209,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
             denormalizationContext: ['groups' => ['votes']],
             name: 'observation_vote'),
         new Get(
-            uriTemplate: '/observations/{id_observation}/{id_commentaire}/vote/',
+            uriTemplate: '/observations/vote/proposition/{id_observation}/{id_commentaire}',
             openapiContext: [
                 'summary' => 'Get all votes from a proposition',
                 'description' => 'Get all votes from a proposition',
