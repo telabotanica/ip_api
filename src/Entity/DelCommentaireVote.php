@@ -97,7 +97,7 @@ class DelCommentaireVote
         return $this->ce_utilisateur;
     }
 
-//    public function getCeUtilisateur(): ?DelUtilisateurInfos
+//    public function getCeUtilisateur(): ?string
 //    {
 //        return $this->ce_utilisateur;
 //    }

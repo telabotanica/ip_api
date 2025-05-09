@@ -211,15 +211,15 @@ class Mapping extends AbstractController
     public function mapVotes($vote):array
     {
         $user = null;
-        if ( $vote->getAuteurId() != '0'){
+        if ( $vote->getAuteurId() != '0' && $vote->getAuteurId() != null &&  strlen($vote->getAuteurId()) < 6){
             $user=$this->userRepository->findOneBy(['id_utilisateur' => $vote->getAuteurId()]);
         }
 
         return [
-            'id_vote' => $vote->getIdVote(),
-            'proposition' => $vote->getProposition(),
+            'vote.id' => $vote->getIdVote(),
+            'proposition.id' => $vote->getProposition(),
             'auteur.id' => $vote->getAuteurId(),
-            'valeur' => $vote->getValeur(),
+            'vote' => $vote->getValeur(),
             'date' => $vote->getDate()->format('Y-m-d H:i:s'),
             'auteur.nom' => $user?->getNom(),
             'auteur.prenom' => $user?->getPrenom(),
