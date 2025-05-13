@@ -226,7 +226,7 @@ class DelCommentaireController extends AbstractController
         }
 
         $parametres = [
-            'certainty' => 'certain',
+//            'certainty' => 'certain',
             'userSciNameId' => (int)$commentaire->getNomSelNn(),
             'userSciName' => $commentaire->getNomSel(),
             'taxoRepo' => $commentaire->getNomReferentiel(),
