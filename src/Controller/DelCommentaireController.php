@@ -130,7 +130,10 @@ class DelCommentaireController extends AbstractController
 
         $erreurs = $this->commentaireService->verifierParametres($content, $erreurs);
         if (!empty($erreurs)) {
-            $msg = "Erreur de configuration : ".implode(" --- ", $erreurs);
+            $erreurs = array_map(function ($e) {
+                return is_array($e) ? implode(', ', $e) : $e;
+            }, $erreurs);
+            $msg = "Erreur de configuration : " . implode(" --- ", $erreurs);
             return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
         }
 

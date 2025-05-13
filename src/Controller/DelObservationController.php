@@ -131,7 +131,7 @@ class DelObservationController extends AbstractController
     }
 
     // toutes les infos sur les votes d'une observation
-    #[Route('/observations/{id_observation}/vote', name: 'observation_vote', methods: ['GET'])]
+    #[Route('/observations/vote/{id_observation}', name: 'observation_vote', methods: ['GET'])]
     public function getObsVotes(int $id_observation): Response
     {
         $commentaires = $this->commentaireRepository->findBy(['ce_observation' => $id_observation]);
@@ -153,7 +153,7 @@ class DelObservationController extends AbstractController
     }
 
     // toutes les infos sur les votes d'une proposition
-    #[Route('/observations/{id_observation}/{id_commentaire}/vote/', name: 'proposition_vote', methods: ['GET'])]
+    #[Route('/observations/vote/proposition/{id_observation}/{id_commentaire}', name: 'proposition_vote', methods: ['GET'])]
     public function getPropositionVotes(int $id_observation, int $id_commentaire): Response
     {
         $mappedVotes = [];
