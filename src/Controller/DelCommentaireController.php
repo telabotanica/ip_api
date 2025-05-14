@@ -253,8 +253,8 @@ class DelCommentaireController extends AbstractController
         $this->em->flush();
 
         //TODO: envoie mail à auteur selon les préférences.
-
-        return new Response("Proposition validée", Response::HTTP_CREATED);
+        $json = json_encode(["message" => "Valide"], true);
+        return new JsonResponse($json, Response::HTTP_CREATED, [], true);
     }
 
 }
