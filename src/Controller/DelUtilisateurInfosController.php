@@ -32,7 +32,9 @@ class DelUtilisateurInfosController extends AbstractController
     {
         $auth = $annuaire->getUtilisateurAuthentifie($request);
         if ($auth->getStatusCode() != 200) {
-            return new JsonResponse(['message' => 'Utilisateur non enregristré ou token manquant'], Response::HTTP_UNAUTHORIZED);
+            $user = $annuaire->getUtilisateurAnonyme();
+            $json = $serializer->serialize($user, 'json', ['groups' => 'user']);
+            return new JsonResponse($json, Response::HTTP_OK, [], true);
         }
         $user = $delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
         if (!$user) {
@@ -44,7 +46,6 @@ class DelUtilisateurInfosController extends AbstractController
         $em->flush();
 
         $json = $serializer->serialize($user, 'json', ['groups' => 'user']);
-
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 }
