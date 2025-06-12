@@ -263,6 +263,8 @@ class Mapping extends AbstractController
         }
 
         $total = $this->obsRepository->findTotalByCriterieas($criteres, $filters);
+//        $total = $this->obsRepository->findTotalByCriteriasNative($criteres, $filters, true);
+
         $href_precedent = "";
         $href_suivant = "";
 

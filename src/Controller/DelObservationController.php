@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\DelCommentaireVote;
 use App\Repository\DelCommentaireRepository;
 use App\Repository\DelCommentaireVoteRepository;
+use App\Repository\DelImageRepository;
 use App\Repository\DelObservationRepository;
 use App\Repository\DelUtilisateurInfosRepository;
 use App\Service\AnnuaireService;
@@ -92,6 +93,7 @@ class DelObservationController extends AbstractController
             $observations = $this->obsRepository->findMonActivite($criteres);
         } else {
             $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
+//            $observations = $this->obsRepository->findAllPaginatedNative($criteres, $filters);
         }
 
         if (!$observations) {
