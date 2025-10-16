@@ -79,10 +79,6 @@ class DelObservationController extends AbstractController
                 return new JsonResponse(['error' => 'Vous devez être connecté pour accéder à cette page'], Response::HTTP_UNAUTHORIZED);
             }
 
-//            $cookie = $request->cookies->get($this->annuaire->getCookieName()) ?? null;
-//            if (!$cookie) {
-//                return new JsonResponse(['message' => 'Vous devez vous connecter pour accéder à votrea activité'], Response::HTTP_UNAUTHORIZED);
-//            }
             $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
             $json = $this->serializer->serialize($user, 'json', ['groups' => 'user']);
 
@@ -93,7 +89,6 @@ class DelObservationController extends AbstractController
             $observations = $this->obsRepository->findMonActivite($criteres);
         } else {
             $observations = $this->obsRepository->findAllPaginated($criteres, $filters);
-//            $observations = $this->obsRepository->findAllPaginatedNative($criteres, $filters);
         }
 
         if (!$observations) {

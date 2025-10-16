@@ -39,6 +39,7 @@ class DelObservationRepository extends ServiceEntityRepository
 //            ->setFirstResult($criteres['page']*$criteres['limit']);
             ->setFirstResult($criteres['navigation.depart']);
 
+        // Affiche la requête sql pour debug
 //        $sql = $queryBuilder->getQuery()->getSQL();
 //        dd($sql);
 
@@ -121,19 +122,25 @@ class DelObservationRepository extends ServiceEntityRepository
                     ->setParameter('masque_tag', '%' . $filter->getValue() . '%');
             } else if ($filter->getQueryParameter() == 'masque_auteur') {
                 $queryBuilder
-                    ->andWhere('o.ce_utilisateur = :auteur_id')
-                    ->orWhere('o.nom_utilisateur LIKE :nom')
-                    ->orWhere('o.prenom_utilisateur LIKE :nom')
-                    ->orWhere('o.courriel_utilisateur LIKE :nom')
+                    ->andWhere(
+                        $queryBuilder->expr()->orX(
+                            'o.ce_utilisateur = :auteur_id',
+                            'o.nom_utilisateur LIKE :nom',
+                            'o.prenom_utilisateur LIKE :nom',
+                            'o.courriel_utilisateur LIKE :nom'
+                        )
+                    )
                     ->setParameter('auteur_id', $filter->getValue())
                     ->setParameter('nom', '%' . $filter->getValue() . '%');
             } else if ($filter->getQueryParameter() == 'masque') {
                 $queryBuilder
-                    ->andWhere('o.nom_ret LIKE :masque')
-                    ->orWhere('o.nom_sel LIKE :masque')
-                    ->orWhere('o.famille LIKE :masque')
-                    ->orWhere('o.nom_utilisateur LIKE :masque')
-                    ->orWhere('o.courriel_utilisateur LIKE :masque')
+                    ->andWhere(
+                        $queryBuilder->expr()->orX(
+                            'o.nom_ret LIKE :masque',
+                            'o.nom_sel LIKE :masque',
+                            'o.famille LIKE :masque'
+                        )
+                    )
                     ->setParameter('masque', '%' . $filter->getValue() . '%');
             } else if ($filter->getQueryParameter() == 'masque_departement') {
                 $queryBuilder
