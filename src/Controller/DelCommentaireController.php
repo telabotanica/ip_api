@@ -217,7 +217,8 @@ class DelCommentaireController extends AbstractController
 
         $auth = $this->annuaire->getUtilisateurAuthentifie($request);
         if ($auth->getStatusCode() != 200) {
-            return new JsonResponse(['message' => 'Vous devez vous connecter pour valider cette proposition.'], Response::HTTP_UNAUTHORIZED);
+            $auth_error = json_decode($auth->getContent());
+            return new JsonResponse(['message' => 'Vous devez vous connecter pour valider cette proposition.', 'error' => $auth_error->error], Response::HTTP_UNAUTHORIZED);
         }
 
         $user = $this->delUserRepository->findOneBy(['id_utilisateur' => $auth->getContent()]);
